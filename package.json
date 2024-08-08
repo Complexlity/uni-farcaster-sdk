@@ -2,18 +2,22 @@
   "name": "uni-farcaster-sdk",
   "version": "0.0.1",
   "description": "",
-  "main": "index.js",
+  "main": "./dist/index.js",
+  "module": "./dist/index.mjs",
+  "types": "./dist/index.d.ts",
   "scripts": {
     "test:dev": "vitest",
     "test": "vitest run",
     "build": "tsup src/index.ts --format cjs,esm --dts",
     "lint": "tsc",
-    "ci": "pnpm run test && pnpm run lint && pnpm run build"
+    "ci": "pnpm run test && pnpm run lint && pnpm run build",
+    "release": "pnpm run ci && changeset publish"
   },
   "keywords": [],
   "author": "",
   "license": "ISC",
   "devDependencies": {
+    "@changesets/cli": "^2.27.7",
     "@types/node": "^22.1.0",
     "tsup": "^8.2.4",
     "typescript": "^5.5.4",
