@@ -6,6 +6,7 @@ const sdk = new uniFarcasterSdk({
   airstackApiKey: "string | undefined",
 });
 
+
 const user: User = sdk.getUserByFid(11244, 213144);
 const user2: User = sdk.getUserByUsername("complexlity", 213144);
 const cast: Cast = sdk.getCastByHash("0xa0bc828", 213144);
