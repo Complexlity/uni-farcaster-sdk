@@ -25,14 +25,14 @@ export type User = {
   followerCount: number;
   followingCount: number;
   powerBadge?: boolean;
-  viewerContext?: {
+  viewerContext: {
     following: boolean;
     followedBy: boolean;
   };
 };
 
 export type Cast = {
-  author: User;
+  author: Omit<User, "viewerContext">;
   userReactions: {
     likes: number;
     recasts: number;

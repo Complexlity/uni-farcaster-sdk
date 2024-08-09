@@ -99,7 +99,6 @@ export class neynarService {
 
     const v1User = usersInfo.data.result.user;
     const v2User = convertToV2User(v1User);
-    console.log(v2User);
     const returnedUser = this.getUserFromNeynarResponse(v2User);
     return returnedUser;
 

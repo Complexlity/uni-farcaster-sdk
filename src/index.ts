@@ -43,8 +43,8 @@ class uniFarcasterSdk {
     return await this.activeService.getUserByFid(fid, viewerFid);
   }
 
-  public getUserByUsername(username: string, viewerFid: number): User {
-    return this.activeService.getUserByUsername(username, viewerFid);
+  public getUserByUsername(username: string): Omit<User , "viewerContext"> {
+    return this.activeService.getUserByUsername(username);
   }
 
   public getCastByHash(hash: string, viewerFid: number): Cast {

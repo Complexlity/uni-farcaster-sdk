@@ -13,6 +13,19 @@ const socialReturnedQuery = `
       profileImage
       isFarcasterPowerUser`;
 
+const castReturnedQuery = `
+			embeds
+      text
+      channel {
+        name
+      }
+			numberOfLikes
+      numberOfRecasts
+      castedBy {
+				${socialReturnedQuery}
+      }
+	`;
+
 export const userByFidQuery = (fid: number, viewerFid: number) => `query MyQuery {
   Socials(input: {filter: {userId: {_eq: "${fid}"}}, blockchain: ethereum}) {
     Social {
@@ -47,15 +60,12 @@ export const userByUsernameQuery = (username: string) =>
 }`;
 
 export const castByHashQuery = (castHash: string, viewerFid: number) =>
-  `
-query FetchCastAuthorLikedByAndReactedBy {
+  `query FetchCastAuthorLikedByAndReactedBy {
   FarcasterCasts(
     input: {filter: {hash: {_eq: "${castHash}"}}, blockchain: ALL}
   ) {
     Cast {
-      castedBy {
-        ${socialReturnedQuery}
-      }
+			${castReturnedQuery}
     }
   }
   LikedBy: FarcasterReactions(
@@ -76,26 +86,19 @@ query FetchCastAuthorLikedByAndReactedBy {
       }
     }
   }
+}
 `;
 export const castByUrlQuery = (castUrl: string, viewerFid: number) =>
-  `
-query FetchCastAuthorLikedByAndReactedBy {
+  `query FetchCastAuthorLikedByAndReactedBy {
   FarcasterCasts(
     input: {filter: {url: {_eq: "${castUrl}"}}, blockchain: ALL}
   )  {
     Cast {
-			embeds
-      text
-      channel {
-        name
-      }
-      castedBy {
-
-      }
+			${castReturnedQuery}
     }
   }
   LikedBy: FarcasterReactions(
-    input: {filter: {reactedBy: {_eq: "fc_fid:${viewerFid}"}, castHash: {_eq: "${castUrl}"}, criteria: liked}, blockchain: ALL, limit: 1}
+    input: {filter: {reactedBy: {_eq: "fc_fid:${viewerFid}"}, castUrl: {_eq: "${castUrl}"}, criteria: liked}, blockchain: ALL, limit: 1}
   ) {
     Reaction {
       reactedBy {
@@ -104,7 +107,7 @@ query FetchCastAuthorLikedByAndReactedBy {
     }
   }
   RecastedBy: FarcasterReactions(
-    input: {filter: {reactedBy: {_eq: "fc_fid:${viewerFid}"}, castHash: {_eq: "${castUrl}"}, criteria: recasted}, blockchain: ALL, limit: 1}
+    input: {filter: {reactedBy: {_eq: "fc_fid:${viewerFid}"}, castUrl: {_eq: "${castUrl}"}, criteria: recasted}, blockchain: ALL, limit: 1}
   ) {
     Reaction {
       reactedBy {
@@ -112,4 +115,5 @@ query FetchCastAuthorLikedByAndReactedBy {
       }
     }
   }
+}
 `;
