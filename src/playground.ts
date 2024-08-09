@@ -12,7 +12,8 @@ const user2: User = sdk.getUserByUsername("complexlity", 213144);
 const cast: Cast = sdk.getCastByHash("0xa0bc828", 213144);
 const cast2: Cast = sdk.getCastByUrl("https://warpcast.com/0xa38dj", 213144);
 
-type User = {
+
+export type User = {
   fid: number;
   ethAddresses: string[];
   solAddresses: string[];
@@ -29,7 +30,7 @@ type User = {
   };
 };
 
-type Cast = {
+export type Cast = {
   author: User;
   userReactions: {
     likes: number;

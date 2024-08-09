@@ -1,5 +1,11 @@
+import { User, Cast } from "./playground";
 import { services, TService, Service } from "./services";
-
+type Config = {
+  hubUrl?: string;
+  neynarApiKey?: string;
+  airstackApiKey?: string;
+  activeService?: TService;
+};
 
 class uniFarcasterSdk {
   private hubUrl: string = "DEFAULT_HUB_URL";
@@ -7,12 +13,7 @@ class uniFarcasterSdk {
   private airstackApiKey: string | undefined;
   private activeService: Service = services.hub;
 
-  constructor(config: {
-    hubUrl?: string;
-    neynarApiKey?: string;
-    airstackApiKey?: string;
-    activeService?: TService;
-  }) {
+  constructor(config: Config) {
     this.hubUrl = config.hubUrl ?? "DEFAULT_HUB_URL";
     this.neynarApiKey = config.neynarApiKey;
     this.airstackApiKey = config.airstackApiKey;
@@ -45,7 +46,6 @@ class uniFarcasterSdk {
   public getCastByUrl(url: string, viewerFid: number): Cast {
     return this.activeService.getCastByUrl(url, viewerFid);
   }
-
 }
 
 export default uniFarcasterSdk;
