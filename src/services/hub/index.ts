@@ -1,4 +1,4 @@
-import { Service } from ".";
+import { Service } from "..";
 
 export const hubService: Service = {
 	name: "hub"

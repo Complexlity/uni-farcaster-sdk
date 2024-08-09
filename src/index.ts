@@ -1,5 +1,6 @@
 import { User, Cast } from "./playground";
 import { services, TService, Service } from "./services";
+import { neynarService } from "./services/neynar";
 type Config = {
   hubUrl?: string;
   neynarApiKey?: string;
@@ -14,25 +15,33 @@ class uniFarcasterSdk {
   private activeService: Service = services.hub;
 
   constructor(config: Config) {
-    this.hubUrl = config.hubUrl ?? "DEFAULT_HUB_URL";
+    this.hubUrl = config.hubUrl ?? this.hubUrl;
     this.neynarApiKey = config.neynarApiKey;
     this.airstackApiKey = config.airstackApiKey;
-    this.activeService = this.getActiveService(config.activeService);
+    this.activeService = this.createService(config.activeService);
   }
 
   //TODO: Make more composable
-  private getActiveService(service?: TService): Service {
+  private createService(service?: TService): Service {
     if (service === "neynar" && this.neynarApiKey) {
-      return services.neynar;
+      return new neynarService(this.neynarApiKey);
     } else if (service === "airstack" && this.airstackApiKey) {
-      return services.airstack;
+      return services.airstack.init(this.airstackApiKey);
     } else {
       return services.hub;
     }
   }
 
-  public getUserByFid(fid: number, viewerFid: number): User {
-    return this.activeService.getUserByFid(fid, viewerFid);
+  public getActiveService() {
+    return this.activeService.name;
+  }
+
+  public setActiveService(service: TService) {
+    this.activeService = this.createService(service);
+  }
+
+  public async getUserByFid(fid: number, viewerFid: number) {
+    return await this.activeService.getUserByFid(fid, viewerFid);
   }
 
   public getUserByUsername(username: string, viewerFid: number): User {
