@@ -1,6 +1,5 @@
 import { User, Cast } from "./playground";
 import { services, TService, Service } from "./services";
-import { neynarService } from "./services/neynar";
 type Config = {
   hubUrl?: string;
   neynarApiKey?: string;
@@ -24,9 +23,9 @@ class uniFarcasterSdk {
   //TODO: Make more composable
   private createService(service?: TService): Service {
     if (service === "neynar" && this.neynarApiKey) {
-      return new neynarService(this.neynarApiKey);
+      return new services.neynar(this.neynarApiKey);
     } else if (service === "airstack" && this.airstackApiKey) {
-      return services.airstack.init(this.airstackApiKey);
+      return new services.airstack(this.airstackApiKey);
     } else {
       return services.hub;
     }

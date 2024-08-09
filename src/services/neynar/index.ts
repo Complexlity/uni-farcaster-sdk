@@ -59,7 +59,10 @@ export class neynarService {
       viewerContext: {
         liked: cast.viewer_context.liked,
         recasted: cast.viewer_context.recasted,
-      }
+      },
+      text: cast.text,
+      embeds: cast.embeds,
+      channel: cast.channel
     }
   }
   async getUserByFid(fid: number, viewerFid: number = 1): Promise<User> {
