@@ -53,9 +53,16 @@ export interface NeynarCast {
   embeds:             any[];
   reactions:          Reactions;
   replies:            Replies;
-  channel:            null;
+  channel:            NeynarChannel | null;
   mentioned_profiles: any[];
   viewer_context:     CastViewerContext;
+}
+
+export interface NeynarChannel {
+  object:             string;
+  id:                 string;
+  name:               string;
+  image_url:          string;
 }
 
 export interface NeynarUser {

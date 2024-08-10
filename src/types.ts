@@ -48,7 +48,7 @@ type UserWithOptionalViewerContext = Prettify<Omit<User, "viewerContext">> & Par
 export interface Service {
 	name: TService;
 	getUserByFid(fid: number, viewerFid: number): Promise<DataOrError<User>>;
-	getUserByUsername(username: string, viewerFid?: number): Promise<DataOrError<UserWithOptionalViewerContext>>;
+	getUserByUsername(username: string, viewerFid: number): Promise<DataOrError<UserWithOptionalViewerContext>>;
 	getCastByHash(hash: string, viewerFid: number): Promise<DataOrError<Cast>>;
 	getCastByUrl(url: string, viewerFid: number): Promise<DataOrError<Cast>>;
 }

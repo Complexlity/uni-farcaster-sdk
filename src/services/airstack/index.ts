@@ -99,7 +99,8 @@ export class airstackService implements Service {
   }
 
   async getUserByUsername(
-    username: string
+    username: string,
+    viewerFid: number
   ): Promise<DataOrError<Omit<User, "viewerContext">>> {
     const query = userByUsernameQuery(username);
     const { data, error } = await fetchQuery(query);

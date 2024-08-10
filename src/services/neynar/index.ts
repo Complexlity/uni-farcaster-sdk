@@ -7,6 +7,7 @@ import {
   NeynarUser,
 } from "./utils";
 import { TService } from "..";
+import { AxiosError } from "axios";
 const baseUrl = "https://api.neynar.com";
 const api = axios.create({
   baseURL: baseUrl,
@@ -25,6 +26,14 @@ export class neynarService implements Service {
   constructor(apiKey: string) {
     this.apiKey = apiKey;
   }
+
+  private handleError(e: any) {
+    if(e instanceof AxiosError) {
+        return { data: null, error: {message: e.response?.data?.error.message} };
+      }
+      return { data: null, error: e };
+    }
+
 
   private getHeaders() {
     return {
@@ -68,12 +77,12 @@ export class neynarService implements Service {
       },
       text: cast.text,
       embeds: cast.embeds,
-      channel: cast.channel,
+      channel: !!cast.channel ? cast.channel.name : null,
     };
   }
   async getUserByFid(
     fid: number,
-    viewerFid: number = 1
+    viewerFid: number
   ): Promise<DataOrError<User>> {
     try {
       const usersInfo = await api.get<{ users: NeynarUser[] }>(
@@ -91,12 +100,12 @@ export class neynarService implements Service {
       const returnedUser = this.getUserFromNeynarResponse(user);
       return { data: returnedUser, error: null };
     } catch (e) {
-      return { data: null, error: e };
+      return this.handleError(e)
     }
   }
-  async getUserByUsername(
+    async getUserByUsername(
     username: string,
-    viewerFid: number = 1
+    viewerFid: number
   ): Promise<DataOrError<Omit<User, "powerBadge">>> {
     try {
       const usersInfo = await api.get<{ result: { user: any } }>(
@@ -115,13 +124,13 @@ export class neynarService implements Service {
       const returnedUser = this.getUserFromNeynarResponse(v2User);
       return { data: returnedUser, error: null };
     } catch (e) {
-      return { data: null, error: e };
+      return this.handleError(e);
     }
   }
 
   async getCastByHash(
     hash: string,
-    viewerFid: number = 1
+    viewerFid: number
   ): Promise<DataOrError<Cast>> {
     try {
       const castInfo = await api.get<CastFetchResult>("/v2/farcaster/cast", {
@@ -137,7 +146,7 @@ export class neynarService implements Service {
       const returnedCast = this.getCastFromNeynarResponse(cast);
       return { data: returnedCast, error: null };
     } catch (e) {
-      return { data: null, error: e };
+      return this.handleError(e);
     }
   }
 
@@ -159,7 +168,7 @@ export class neynarService implements Service {
       const returnedCast = this.getCastFromNeynarResponse(cast);
       return { data: returnedCast, error: null };
     } catch (e) {
-      return { data: null, error: e };
+      return this.handleError(e);
     }
   }
 }

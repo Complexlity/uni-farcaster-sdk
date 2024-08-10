@@ -1,9 +1,11 @@
 import { Config, Service } from "@/types";
 import { services, TService, } from "./services";
+import { isAddress } from "./utils";
+import { DEFAULTS } from "./constants";
 
 
 class uniFarcasterSdk implements Omit<Service, "name"> {
-  private hubUrl: string = "DEFAULT_HUB_URL";
+  private hubUrl: string = DEFAULTS.hubUrl;
   private neynarApiKey: string | undefined;
   private airstackApiKey: string | undefined;
   private activeService = new services.hub(this.hubUrl);
@@ -40,20 +42,24 @@ class uniFarcasterSdk implements Omit<Service, "name"> {
     this.activeService = this.createService(service);
   }
 
-  public async getUserByFid(fid: number, viewerFid: number) {
+  public async getUserByFid(fid: number, viewerFid: number = DEFAULTS.fid) {
     return await this.activeService.getUserByFid(fid, viewerFid);
   }
 
-  public getUserByUsername(username: string) {
-    return this.activeService.getUserByUsername(username);
+  public async getUserByUsername(username: string, viewerFid: number = DEFAULTS.fid) {
+    return await this.activeService.getUserByUsername(username, viewerFid);
   }
 
-  public getCastByHash(hash: string, viewerFid: number) {
-    return this.activeService.getCastByHash(hash, viewerFid);
+  public async getCastByHash(hash: string, viewerFid: number = DEFAULTS.fid) {
+    const isValidHash = isAddress(hash);
+    if (!isValidHash) {
+      return { data: null, error: { message: "Invalid hash" } };
+    }
+    return await this.activeService.getCastByHash(hash, viewerFid);
   }
 
-  public getCastByUrl(url: string, viewerFid: number) {
-    return this.activeService.getCastByUrl(url, viewerFid);
+  public async getCastByUrl(url: string, viewerFid: number = DEFAULTS.fid) {
+    return await this.activeService.getCastByUrl(url, viewerFid);
   }
 }
 
