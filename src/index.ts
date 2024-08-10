@@ -1,11 +1,6 @@
-import { User, Cast } from "./playground";
+import { User, Cast, Config } from "@/types";
 import { services, TService, Service } from "./services";
-type Config = {
-  hubUrl?: string;
-  neynarApiKey?: string;
-  airstackApiKey?: string;
-  activeService?: TService;
-};
+
 
 class uniFarcasterSdk {
   private hubUrl: string = "DEFAULT_HUB_URL";
@@ -26,7 +21,13 @@ class uniFarcasterSdk {
       return new services.neynar(this.neynarApiKey);
     } else if (service === "airstack" && this.airstackApiKey) {
       return new services.airstack(this.airstackApiKey);
-    } else {
+    } else if(this.neynarApiKey) {
+      return new services.neynar(this.neynarApiKey);
+    }
+    else if(this.airstackApiKey) {
+      return new services.airstack(this.airstackApiKey);
+    }
+    else {
       return services.hub;
     }
   }

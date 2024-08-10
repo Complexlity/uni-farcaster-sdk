@@ -1,15 +1,12 @@
-import { error } from "console";
-import { Service } from "..";
-import { User, Cast } from "../../playground";
+import { Cast, Service, User, DataOrError } from "@/types";
+import axios from "axios";
 import {
   CastFetchResult,
   convertToV2User,
   NeynarCast,
   NeynarUser,
 } from "./utils";
-import axios from "axios";
-import fs from "fs";
-import { DataOrError } from "../../types";
+import { TService } from "..";
 const baseUrl = "https://api.neynar.com";
 const api = axios.create({
   baseURL: baseUrl,
@@ -21,8 +18,10 @@ const api = axios.create({
 //   viewer_fid: `${fid}`,
 // };
 
-export class neynarService {
+export class neynarService implements Service {
   private apiKey: string;
+  public name: TService = "airstack";
+
   constructor(apiKey: string) {
     this.apiKey = apiKey;
   }
@@ -72,7 +71,10 @@ export class neynarService {
       channel: cast.channel,
     };
   }
-  async getUserByFid(fid: number, viewerFid: number = 1): Promise<DataOrError<User>> {
+  async getUserByFid(
+    fid: number,
+    viewerFid: number = 1
+  ): Promise<DataOrError<User>> {
     try {
       const usersInfo = await api.get<{ users: NeynarUser[] }>(
         "/v2/farcaster/user/bulk",
@@ -92,7 +94,10 @@ export class neynarService {
       return { data: null, error: e };
     }
   }
-  async getUserByUsername(username: string, viewerFid: number = 1): Promise<DataOrError<Omit<User, "powerBadge">>> {
+  async getUserByUsername(
+    username: string,
+    viewerFid: number = 1
+  ): Promise<DataOrError<Omit<User, "powerBadge">>> {
     try {
       const usersInfo = await api.get<{ result: { user: any } }>(
         "/v1/farcaster/user-by-username",
@@ -114,7 +119,10 @@ export class neynarService {
     }
   }
 
-  async getCastByHash(hash: string, viewerFid: number = 1): Promise<DataOrError<Cast>> {
+  async getCastByHash(
+    hash: string,
+    viewerFid: number = 1
+  ): Promise<DataOrError<Cast>> {
     try {
       const castInfo = await api.get<CastFetchResult>("/v2/farcaster/cast", {
         params: {
@@ -133,18 +141,25 @@ export class neynarService {
     }
   }
 
-  async getCastByUrl(url: string, viewerFid: number): Promise<Cast> {
-    const castInfo = await api.get<CastFetchResult>("/v2/farcaster/cast", {
-      params: {
-        type: "url",
-        identifier: url,
-        viewer_fid: `${viewerFid}`,
-      },
-      headers: this.getHeaders(),
-    });
+  async getCastByUrl(
+    url: string,
+    viewerFid: number
+  ): Promise<DataOrError<Cast>> {
+    try {
+      const castInfo = await api.get<CastFetchResult>("/v2/farcaster/cast", {
+        params: {
+          type: "url",
+          identifier: url,
+          viewer_fid: `${viewerFid}`,
+        },
+        headers: this.getHeaders(),
+      });
 
-    const cast = castInfo.data.cast;
-    const returnedCast = this.getCastFromNeynarResponse(cast);
-    return returnedCast;
+      const cast = castInfo.data.cast;
+      const returnedCast = this.getCastFromNeynarResponse(cast);
+      return { data: returnedCast, error: null };
+    } catch (e) {
+      return { data: null, error: e };
+    }
   }
 }
