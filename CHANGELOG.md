@@ -1,5 +1,11 @@
 # uni-farcaster-sdk
 
+## 0.0.5
+
+### Patch Changes
+
+- 3bd481d: Fix active service type
+
 ## 0.0.4
 
 ### Patch Changes
