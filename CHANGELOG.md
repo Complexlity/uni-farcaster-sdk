@@ -1,5 +1,11 @@
 # uni-farcaster-sdk
 
+## 0.0.6
+
+### Patch Changes
+
+- 48125b9: Fix incorrect service name
+
 ## 0.0.5
 
 ### Patch Changes
