@@ -20,7 +20,7 @@ const api = axios.create({
 
 export class neynarService implements Service {
   private apiKey: string;
-  public name: TService = "airstack";
+  public name: TService = "neynar";
 
   constructor(apiKey: string) {
     this.apiKey = apiKey;
