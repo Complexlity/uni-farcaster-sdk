@@ -1,5 +1,11 @@
 # uni-farcaster-sdk
 
+## 0.0.7
+
+### Patch Changes
+
+- bdd5ea2: Fix bio returning undefined
+
 ## 0.0.6
 
 ### Patch Changes
