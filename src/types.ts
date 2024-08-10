@@ -1,14 +1,14 @@
 import { TService } from "./services";
 
 export type DataOrError<T> =
-  | {
-      data: T;
-      error: null;
-    }
-  | {
-      data: null;
-      error: any;
-    };
+	| {
+		data: T;
+		error: null;
+	}
+	| {
+		data: null;
+		error: any;
+	}
 
 export type User = {
   fid: number;
@@ -41,20 +41,16 @@ export type Cast = {
   embeds: any[];
   channel: string | null;
 };
-type Prettify<T> = { [K in keyof T]: T[K] } & {};
+type Prettify<T> = { [K in keyof T]: T[K] } & {}
 
-type UserWithOptionalViewerContext = Prettify<Omit<User, "viewerContext">> &
-  Partial<{ viewerContext: User["viewerContext"] }>;
+type UserWithOptionalViewerContext = Prettify<Omit<User, "viewerContext">> & Partial<{ viewerContext: User["viewerContext"] }>
 
 export interface Service {
-  name: TService;
-  getUserByFid(fid: number, viewerFid: number): Promise<DataOrError<User>>;
-  getUserByUsername(
-    username: string,
-    viewerFid: number
-  ): Promise<DataOrError<UserWithOptionalViewerContext>>;
-  getCastByHash(hash: string, viewerFid: number): Promise<DataOrError<Cast>>;
-  getCastByUrl(url: string, viewerFid: number): Promise<DataOrError<Cast>>;
+	name: TService;
+	getUserByFid(fid: number, viewerFid: number): Promise<DataOrError<User>>;
+	getUserByUsername(username: string, viewerFid?: number): Promise<DataOrError<UserWithOptionalViewerContext>>;
+	getCastByHash(hash: string, viewerFid: number): Promise<DataOrError<Cast>>;
+	getCastByUrl(url: string, viewerFid: number): Promise<DataOrError<Cast>>;
 }
 
 export type Config = {
@@ -67,3 +63,4 @@ export type Config = {
     ? never
     : TService;
 };
+

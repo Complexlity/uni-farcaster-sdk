@@ -1,12 +1,12 @@
-import { User, Cast, Config } from "@/types";
-import { services, TService, Service } from "./services";
+import { Config, Service } from "@/types";
+import { services, TService, } from "./services";
 
 
-class uniFarcasterSdk {
+class uniFarcasterSdk implements Omit<Service, "name"> {
   private hubUrl: string = "DEFAULT_HUB_URL";
   private neynarApiKey: string | undefined;
   private airstackApiKey: string | undefined;
-  private activeService: Service = services.hub;
+  private activeService = new services.hub(this.hubUrl);
 
   constructor(config: Config) {
     this.hubUrl = config.hubUrl ?? this.hubUrl;
@@ -28,7 +28,7 @@ class uniFarcasterSdk {
       return new services.airstack(this.airstackApiKey);
     }
     else {
-      return services.hub;
+      return new services.hub(this.hubUrl);
     }
   }
 
@@ -44,15 +44,15 @@ class uniFarcasterSdk {
     return await this.activeService.getUserByFid(fid, viewerFid);
   }
 
-  public getUserByUsername(username: string): Omit<User , "viewerContext"> {
+  public getUserByUsername(username: string) {
     return this.activeService.getUserByUsername(username);
   }
 
-  public getCastByHash(hash: string, viewerFid: number): Cast {
+  public getCastByHash(hash: string, viewerFid: number) {
     return this.activeService.getCastByHash(hash, viewerFid);
   }
 
-  public getCastByUrl(url: string, viewerFid: number): Cast {
+  public getCastByUrl(url: string, viewerFid: number) {
     return this.activeService.getCastByUrl(url, viewerFid);
   }
 }
