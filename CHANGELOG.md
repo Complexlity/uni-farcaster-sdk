@@ -1,5 +1,11 @@
 # uni-farcaster-sdk
 
+## 0.0.8
+
+### Patch Changes
+
+- f7fee8f: Create defaults, error handling
+
 ## 0.0.7
 
 ### Patch Changes
