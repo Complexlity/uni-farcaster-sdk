@@ -1,5 +1,11 @@
 # uni-farcaster-sdk
 
+## 0.0.4
+
+### Patch Changes
+
+- db60b92: Complete airstack and neynar services
+
 ## 0.0.3
 
 ### Patch Changes
