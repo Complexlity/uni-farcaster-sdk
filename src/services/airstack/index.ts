@@ -13,6 +13,7 @@ import {
   AirstackUserQueryResult as AirstackUserQueryResult,
   Socials,
 } from "./types";
+import { DataOrError } from "../../types";
 
 export class airstackService {
   private apiKey: string;
@@ -76,9 +77,12 @@ export class airstackService {
     return convertedCast;
   }
 
-  async getUserByFid(fid: number, viewerFid: number): Promise<User> {
+  async getUserByFid(fid: number, viewerFid: number): Promise<DataOrError<User>> {
     const query = userByFidQuery(fid, viewerFid);
     const { data, error } = await fetchQuery(query);
+    if (error) {
+      return {data: null, error};
+    }
     const returnedData = data as AirstackUserQueryResult;
     const user = this.getUserFromAirstackSociaslResult(
       returnedData.Socials.Social[0]
@@ -87,35 +91,43 @@ export class airstackService {
       following: !!returnedData.Following.Following,
       followedBy: !!returnedData.Followedby.Following,
     };
-    return { ...user, viewerContext };
+    return {data: { ...user, viewerContext }, error: null};
   }
 
   async getUserByUsername(
     username: string
-  ): Promise<Omit<User, "viewerContext">> {
+  ): Promise<DataOrError<Omit<User, "viewerContext">>> {
     const query = userByUsernameQuery(username);
     const { data, error } = await fetchQuery(query);
+    if (error) {
+      return {data: null, error};
+    }
     const returnedData = data as Omit<
       AirstackUserQueryResult,
       "Following" | "Followedby"
     >;
-    return this.getUserFromAirstackSociaslResult(
-      returnedData.Socials.Social[0]
-    );
+    return {data: this.getUserFromAirstackSociaslResult(
+      returnedData.Socials.Social[0]) , error: null};
+    ;
   }
 
-  async getCastByHash(hash: string, viewerFid: number): Promise<Cast> {
+  async getCastByHash(hash: string, viewerFid: number): Promise<DataOrError<Cast>> {
     const query = castByHashQuery(hash, viewerFid);
     const { data, error } = await fetchQuery(query);
-    fs.writeFileSync("cast.json", JSON.stringify(data, null, 2));
+    if (error) {
+      return {data: null, error};
+    }
     const returnedData = data as AirstackCastQueryResult;
-    return this.getCastFromAirstackResult(returnedData);
+    return {data: this.getCastFromAirstackResult(returnedData), error: null};
   }
 
-  async getCastByUrl(url: string, viewerFid: number): Promise<Cast> {
+  async getCastByUrl(url: string, viewerFid: number): Promise<DataOrError<Cast>> {
     const query = castByUrlQuery(url, viewerFid);
     const { data, error } = await fetchQuery(query);
+    if (error) {
+      return {data: null, error};
+    }
     const returnedData = data as AirstackCastQueryResult;
-    return this.getCastFromAirstackResult(returnedData);
+    return {data: this.getCastFromAirstackResult(returnedData), error: null};
   }
 }
