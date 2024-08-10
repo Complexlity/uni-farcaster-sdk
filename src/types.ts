@@ -57,10 +57,6 @@ export type Config = {
   hubUrl?: string;
   neynarApiKey?: string;
   airstackApiKey?: string;
-  activeService?: [
-    Exclude<keyof Omit<Config, "activeService">, undefined>
-  ] extends [never] | [keyof Omit<Config, "activeService">]
-    ? never
-    : TService;
+  activeService?: TService
 };
 
