@@ -8,7 +8,9 @@ export const convertToV2User = (v1User: any): NeynarUser => {
     display_name: v1User.displayName,
     pfp_url: v1User.pfp.url,
     profile: {
-      bio: v1User.profile.bio.text,
+      bio: {
+        text: v1User.profile.bio.text
+      },
     },
     follower_count: v1User?.followerCount,
     following_count: v1User?.followingCount,
