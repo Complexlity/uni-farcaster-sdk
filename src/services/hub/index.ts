@@ -8,8 +8,13 @@ export class hubService implements Service {
 	constructor(hubUrl: string) {
 		this.hubUrl = hubUrl;
 	}
+
+	private async genericError() {
+		return Promise.resolve({ data: null, error: new Error("Not implemented yet. Pleas provide a neynarApiKey or airstackApiKey in sdk config option") });
+	}
+
 	async getUserByFid(fid: number, viewerFid: number): Promise<DataOrError<User>> {
-		return Promise.resolve({ data: null, error: new Error("Not implemented") });
+		return this.genericError()
 	}
 	async getUserByUsername(
 		username: string,

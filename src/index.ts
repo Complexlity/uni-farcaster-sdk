@@ -8,7 +8,7 @@ class uniFarcasterSdk implements Omit<Service, "name"> {
   private hubUrl: string = DEFAULTS.hubUrl;
   private neynarApiKey: string | undefined;
   private airstackApiKey: string | undefined;
-  private activeService = new services.hub(this.hubUrl);
+  private activeService: Service = new services.hub(this.hubUrl);
 
   constructor(config: Config) {
     this.hubUrl = config.hubUrl ?? this.hubUrl;
