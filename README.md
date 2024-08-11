@@ -1,4 +1,4 @@
-# Uni Farcaster SDK
+# UniFarcaster SDK
 
 This is an SDK that combines neynar, airstack to provide a single API without needing to know the underlying apis of both. By default, it should support just passing a hub url and have a default, but in the current implementation, you need either a neynar api key or an airstack api key.
 
@@ -23,28 +23,28 @@ const sdkInstance = uniFarcasterSdk({
 // Neynar
 const sdkInstance = uniFarcasterSdk({
 	neynarApiKey: 'your-neynar-api-key',
-	activeService: 'neynar',
+	activeService: 'neynar'//Optional. It's implied from the api key you provide
 })
 // Airstack
 const sdkInstance = uniFarcasterSdk({
 	airstackApiKey: 'your-airstack-api-key',
-	activeService: 'airstack',
+	activeService: 'airstack' //Optional. It's implied from the api key you provide
 })
 
 //Both
 const sdkInstance = uniFarcasterSdk({
 	neynarApiKey: 'your-neynar-api-key',
 	airstackApiKey: 'your-airstack-api-key',
-	//You have to specify which service you want to use
-	activeService: 'neynar',
+	//You should specify if you prefer neynar or airstack
+	activeService: 'airstack',
 })
 
 //Get Active Service
-sdkInstance.getActiveService() //neynar
+sdkInstance.getActiveService() //airstack
 
 //Set Active Service
-sdkInstance.setActiveService('airstack')
-sdkInstance.getActiveService() //airstack
+sdkInstance.setActiveService('neynar')
+sdkInstance.getActiveService() //neynar
 
 //Get User By Fid
 const userFid = 3
