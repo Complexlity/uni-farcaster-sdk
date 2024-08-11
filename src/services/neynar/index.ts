@@ -6,24 +6,25 @@ import {
   NeynarCast,
   NeynarUser,
 } from "./utils";
-import { TService } from "..";
+import { TService } from "@/services";
 import { AxiosError } from "axios";
-const baseUrl = "https://api.neynar.com";
-const api = axios.create({
-  baseURL: baseUrl,
-});
+import { DEFAULTS } from "@/constants";
 
-// const usersUrl = "https://api.neynar.com/v2/farcaster/user/bulk";
-// const usersParams = {
-//   fids: `${COMPLEXLITY_FID},${fid}`,
-//   viewer_fid: `${fid}`,
-// };
+const BASE_URL = "https://api.neynar.com";
+const api = axios.create({
+  baseURL: BASE_URL,
+});
 
 export class neynarService implements Service {
   private apiKey: string;
   public name: TService = "neynar";
 
   constructor(apiKey: string) {
+     if (!apiKey) {
+       throw new Error(
+         "Attempt to use an neynar API without first providing an api key"
+       );
+     }
     this.apiKey = apiKey;
   }
 
@@ -82,7 +83,7 @@ export class neynarService implements Service {
   }
   async getUserByFid(
     fid: number,
-    viewerFid: number
+    viewerFid: number = DEFAULTS.fid
   ): Promise<DataOrError<User>> {
     try {
       const usersInfo = await api.get<{ users: NeynarUser[] }>(
@@ -105,7 +106,7 @@ export class neynarService implements Service {
   }
     async getUserByUsername(
     username: string,
-    viewerFid: number
+    viewerFid?: number
   ): Promise<DataOrError<Omit<User, "powerBadge">>> {
     try {
       const usersInfo = await api.get<{ result: { user: any } }>(
@@ -130,7 +131,7 @@ export class neynarService implements Service {
 
   async getCastByHash(
     hash: string,
-    viewerFid: number
+    viewerFid: number = DEFAULTS.fid
   ): Promise<DataOrError<Cast>> {
     try {
       const castInfo = await api.get<CastFetchResult>("/v2/farcaster/cast", {
@@ -152,7 +153,7 @@ export class neynarService implements Service {
 
   async getCastByUrl(
     url: string,
-    viewerFid: number
+    viewerFid: number = DEFAULTS.fid
   ): Promise<DataOrError<Cast>> {
     try {
       const castInfo = await api.get<CastFetchResult>("/v2/farcaster/cast", {

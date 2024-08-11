@@ -19,6 +19,11 @@ export class airstackService implements Service {
   public name: TService = "airstack";
   constructor(apiKey: string) {
     this.apiKey = apiKey;
+     if (!apiKey) {
+       throw new Error(
+         "Attempt to use an airstack API without first providing an api key"
+       );
+     }
     init(this.apiKey);
   }
 

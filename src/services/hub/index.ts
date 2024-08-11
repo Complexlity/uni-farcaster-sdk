@@ -1,11 +1,16 @@
 import { DataOrError, Service, User } from "@/types";
-import { TService } from "..";
+import { TService } from "@/services";
 
 export class hubService implements Service {
 	public name: TService = "hub";
 	private hubUrl: string;
 
 	constructor(hubUrl: string) {
+		if (!hubUrl) {
+			throw new Error(
+				"Attempt to use an authenticated hub without first providing an hub url"
+			);
+		}
 		this.hubUrl = hubUrl;
 	}
 

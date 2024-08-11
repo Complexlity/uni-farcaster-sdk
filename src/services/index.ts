@@ -1,9 +1,11 @@
-import { neynarService } from "./neynar";
-import { airstackService } from "./airstack";
-import { hubService } from "./hub";
+import { neynarService } from "@/services/neynar";
+import { airstackService } from "@/services/airstack";
+import { hubService } from "@/services/hub";
 import { Service } from "@/types";
 
-export const services = {
+
+
+export const  services = {
   neynar: neynarService,
   airstack: airstackService,
   hub: hubService,

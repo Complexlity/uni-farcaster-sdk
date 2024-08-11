@@ -1,7 +1,7 @@
 import { Config, Service } from "@/types";
-import { services, TService, } from "./services";
-import { isAddress } from "./utils";
-import { DEFAULTS } from "./constants";
+import { services, TService, } from "@/services";
+import { isAddress } from "@/utils";
+import { DEFAULTS } from "@/constants";
 
 
 class uniFarcasterSdk implements Omit<Service, "name"> {
@@ -9,8 +9,9 @@ class uniFarcasterSdk implements Omit<Service, "name"> {
   private neynarApiKey: string | undefined;
   private airstackApiKey: string | undefined;
   private activeService: Service = new services.hub(this.hubUrl);
+  public name = "uniFarcasterSdk";
 
-  constructor(config: Config) {
+   constructor(config: Config) {
     this.hubUrl = config.hubUrl ?? this.hubUrl;
     this.neynarApiKey = config.neynarApiKey;
     this.airstackApiKey = config.airstackApiKey;
