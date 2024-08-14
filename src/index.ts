@@ -10,15 +10,10 @@ class uniFarcasterSdk implements Omit<Service, "name"> {
   private activeService: Service | undefined;
 
   constructor(config: Config) {
-    //@ts-expect-error
-    if (config.neynarApiKey && config.airstackApiKey) {
-      //@ts-expect-error
+    if ('neynarApiKey' in config && 'airstackApiKey' in config && config.neynarApiKey && config.airstackApiKey) {
       this.neynarApiKey = config.neynarApiKey;
-      //@ts-expect-error
       this.airstackApiKey = config.airstackApiKey;
-      //@ts-expect-error
       if (config.activeService) {
-        //@ts-expect-error
         this.activeService = this.createService(config.activeService);
       } else {
         const randomIndex = Math.floor(
@@ -28,15 +23,11 @@ class uniFarcasterSdk implements Omit<Service, "name"> {
         this.activeService = this.createService(service);
       }
     }
-    //@ts-expect-error
-    else if (config.neynarApiKey) {
-      //@ts-expect-error
+    else if ('neynarApiKey' in config) {
       this.neynarApiKey = config.neynarApiKey;
       this.activeService = this.createService("neynar");
     }
-    //@ts-expect-error
     else if (config.airstackApiKey) {
-      //@ts-expect-error
       this.airstackApiKey = config.airstackApiKey;
       this.activeService = this.createService("airstack");
     } else {
