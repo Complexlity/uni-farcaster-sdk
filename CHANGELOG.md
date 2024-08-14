@@ -1,5 +1,11 @@
 # uni-farcaster-sdk
 
+## 0.0.10
+
+### Patch Changes
+
+- 2fae4c9: Remove hub service
+
 ## 0.0.9
 
 ### Patch Changes
