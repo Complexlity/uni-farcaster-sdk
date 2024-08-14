@@ -1,6 +1,6 @@
 import { expect, test } from "vitest";
 import { airstackService } from ".";
-import { runBasicTests } from "@/utils";
+import { runBasicTests } from "../../utils";
 
 const service = new airstackService("test-api-key");
 

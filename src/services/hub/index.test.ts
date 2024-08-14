@@ -1,8 +1,8 @@
 import { expect, test } from "vitest";
 import { hubService } from ".";
-import { runBasicTests } from "@/utils";
+import { runBasicTests } from "../../utils";
 
-const service = new hubService("https://testhub.com")
+const service = new hubService("https://testhub.com");
 
 runBasicTests(service);
 
