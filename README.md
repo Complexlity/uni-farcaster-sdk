@@ -1,7 +1,6 @@
 # UniFarcaster SDK
 
-This is an SDK that combines neynar, airstack to provide a single API without needing to know the underlying apis of both. By default, it should support just passing a hub url and have a default, but in the current implementation, you need either a neynar api key or an airstack api key.
-
+This is an SDK that combines neynar, airstack to provide a single API without needing to know the underlying apis of both. 
 ## Installation
 
 ```bash
@@ -12,13 +11,6 @@ npm install uni-farcaster-sdk
 
 ```js
 import uniFarcasterSdk from 'uni-farcaster-sdk'
-
-// Hub
-const sdkInstance = uniFarcasterSdk({
-	//Optional: The sdk would provide a default hub url for your
-	hubUrl: 'your-hub-url',
-})
-//NOTE: For now, hub isn't support and you will need to get either airstack or neynar api key
 
 // Neynar
 const sdkInstance = uniFarcasterSdk({
@@ -35,7 +27,7 @@ const sdkInstance = uniFarcasterSdk({
 const sdkInstance = uniFarcasterSdk({
 	neynarApiKey: 'your-neynar-api-key',
 	airstackApiKey: 'your-airstack-api-key',
-	//You should specify if you prefer neynar or airstack
+	//You should specify if you prefer neynar or airstack else is randomly chose one of them
 	activeService: 'airstack',
 })
 
@@ -64,6 +56,7 @@ await sdkInstance.getCastByUrl(castUrl, viewerFid)
 //Get Cast By Hash
 await sdkInstance.getCastByHash(castHash, viewerFid)
 ```
+
 
 
 
