@@ -30,6 +30,7 @@
   },
   "dependencies": {
     "@airstack/node": "^0.0.7",
+    "@open-draft/logger": "^0.3.0",
     "axios": "^1.7.3",
     "ky": "^1.5.0"
   }

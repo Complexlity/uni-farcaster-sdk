@@ -1,3 +1,4 @@
+import { LogLevel } from "./logger";
 import { TService } from "./services";
 
 export type DataOrError<T> =
@@ -58,7 +59,7 @@ export interface Service {
 }
 
 export type Config =
-| {
+(| {
     neynarApiKey: string;
     airstackApiKey: string;
     activeService: TService;
@@ -69,3 +70,13 @@ export type Config =
   | {
       airstackApiKey: string;
     }
+  ) & (
+    | {
+    debug?: boolean
+
+    }
+    | {
+      debug: true,
+      logLevel?: LogLevel
+    }
+  )
