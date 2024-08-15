@@ -1,6 +1,6 @@
 # UniFarcaster SDK
 
-This is an SDK that combines neynar, airstack to provide a single API without needing to know the underlying apis of both. 
+This is an SDK that combines neynar, airstack to provide a single API without needing to know the underlying apis of both.
 ## Installation
 
 ```bash
@@ -21,6 +21,12 @@ const sdkInstance = uniFarcasterSdk({
 const sdkInstance = uniFarcasterSdk({
 	airstackApiKey: 'your-airstack-api-key',
 	activeService: 'airstack' //Optional. It's implied from the api key you provide
+})
+
+// Invalid active service
+const sdkInstance = uniFarcasterSdk({
+	airstackApiKey: 'your-airstack-api-key',
+	activeService: 'neynar' //It's ingnored and automatically set to airstack
 })
 
 //Both
@@ -47,8 +53,7 @@ await sdkInstance.getUserByFid(3, 4)
 //Get User By Username
 const userName = 'ds8'
 await sdkInstance.getUserByUsername(userName)
-
-//Getting by username doesn't return viewer context when using airstack instance so use getUserByFid when you always need viewerContext
+//Viewer Fid is optional and defaults to 213144
 
 //Get Cast By Url
 await sdkInstance.getCastByUrl(castUrl, viewerFid)
@@ -56,6 +61,48 @@ await sdkInstance.getCastByUrl(castUrl, viewerFid)
 //Get Cast By Hash
 await sdkInstance.getCastByHash(castHash, viewerFid)
 ```
+
+> [!IMPORTANT]
+> Getting by username doesn't return viewer context when using airstack instance so use getUserByFid when you always need viewerContext.
+
+
+
+### Return Types
+```ts
+type User = {
+  fid: number;
+  ethAddresses: string[];
+  solAddresses: string[];
+  username: string;
+  displayName: string;
+  bio: string;
+  pfpUrl: string;
+  followerCount: number;
+  followingCount: number;
+  powerBadge?: boolean;
+  viewerContext: {
+    following: boolean;
+    followedBy: boolean;
+  };
+};
+
+type Cast = {
+  author: UserWithOptionalViewerContext;
+  userReactions: {
+    likes: number;
+    recasts: number;
+  };
+  viewerContext: {
+    liked: boolean;
+    recasted: boolean;
+  };
+  text: string;
+  embeds: any[];
+  channel: string | null;
+};
+```
+
+
 
 
 
