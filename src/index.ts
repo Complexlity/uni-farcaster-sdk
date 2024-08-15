@@ -3,6 +3,8 @@ import { services, TService } from "@/services";
 import { isAddress } from "@/utils";
 import { DEFAULTS } from "@/constants";
 
+
+
 class uniFarcasterSdk implements Omit<Service, "name"> {
   private neynarApiKey: string | undefined;
   private airstackApiKey: string | undefined;
@@ -10,31 +12,10 @@ class uniFarcasterSdk implements Omit<Service, "name"> {
   private activeService: Service | undefined;
 
   constructor(config: Config) {
-    if ('neynarApiKey' in config && 'airstackApiKey' in config && config.neynarApiKey && config.airstackApiKey) {
-      this.neynarApiKey = config.neynarApiKey;
-      this.airstackApiKey = config.airstackApiKey;
-      if (config.activeService) {
-        this.activeService = this.createService(config.activeService);
-      } else {
-        const randomIndex = Math.floor(
-          Math.random() * Object.keys(services).length
-        );
-        const service = Object.keys(services)[randomIndex] as TService;
-        this.activeService = this.createService(service);
-      }
-    }
-    else if ('neynarApiKey' in config) {
-      this.neynarApiKey = config.neynarApiKey;
-      this.activeService = this.createService("neynar");
-    }
-    else if (config.airstackApiKey) {
-      this.airstackApiKey = config.airstackApiKey;
-      this.activeService = this.createService("airstack");
-    } else {
-      throw new Error(
-        "You must provide either a neynarApiKey or airstackApiKey"
-      );
-    }
+    const { activeServiceName, neynarApiKey, airstackApiKey } = evaluateConfig(config);
+    this.neynarApiKey = neynarApiKey;
+    this.airstackApiKey = airstackApiKey;
+    this.activeService = this.createService(activeServiceName);
   }
 
   //TODO: Make more composable
@@ -89,6 +70,41 @@ class uniFarcasterSdk implements Omit<Service, "name"> {
     }
     return await this.activeService!.getCastByUrl(url, viewerFid);
   }
+}
+
+
+function evaluateConfig(config: Config) {
+  let activeServiceName: TService = "neynar";
+  let airstackApiKey: string | undefined;
+  let neynarApiKey: string | undefined;
+  if (
+    "neynarApiKey" in config &&
+    "airstackApiKey" in config &&
+    config.neynarApiKey &&
+    config.airstackApiKey
+  ) {
+    neynarApiKey = config.neynarApiKey;
+    airstackApiKey = config.airstackApiKey;
+    if (config.activeService) {
+      activeServiceName = config.activeService;
+    } else {
+      const randomIndex = Math.floor(
+        Math.random() * Object.keys(services).length
+      );
+      const service = Object.keys(services)[randomIndex] as TService;
+
+      activeServiceName = service;
+    }
+  } else if ("neynarApiKey" in config) {
+    neynarApiKey = config.neynarApiKey;
+    activeServiceName = "neynar";
+  } else if (config.airstackApiKey) {
+    airstackApiKey = config.airstackApiKey;
+    activeServiceName = "airstack";
+  } else {
+    throw new Error("You must provide either a neynarApiKey or airstackApiKey");
+  }
+  return { activeServiceName, neynarApiKey, airstackApiKey };
 }
 
 export default uniFarcasterSdk;
