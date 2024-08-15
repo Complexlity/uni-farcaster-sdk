@@ -1,5 +1,11 @@
 # uni-farcaster-sdk
 
+## 0.0.11
+
+### Patch Changes
+
+- 9c92f48: Extract evaluate config, update readme
+
 ## 0.0.10
 
 ### Patch Changes
