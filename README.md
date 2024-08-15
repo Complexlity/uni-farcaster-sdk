@@ -113,6 +113,7 @@ All queries don't throw errors but return an object
 Check if error is not null to know if there was an error and handle it accordingly.
 
 ## TODO
+- Add a logger and debug mode that logs the query, and active service when called
 - Add an optional `retry` config to all queries and the option to switch service if there's an error
 i.e If the current active service is airstack and the query fails, it will try to use neynar`
 - Add a cache to all queries.
