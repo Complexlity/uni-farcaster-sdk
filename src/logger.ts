@@ -94,3 +94,7 @@ interface ILogger {
 	warning(text: string): void;
 	error(text: string): void;
 }
+let logger = new Logger("TestLogger", "error");
+logger.info("This is an info message");
+logger.success("This is a success message");
+logger.warning("This is a warning message");

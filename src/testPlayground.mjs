@@ -2,7 +2,7 @@ import uniFarcasterSdk from "@";
 
 const sdk = new uniFarcasterSdk({
   neynarApiKey: "NEYNAR_API_DOCS",
-  airstackApiKey: "1534c9578b8e645b796727f8d3236993b",
+  airstackApiKey: "AIRSTACK_API_DOCS",
   activeService: "neynar",
 	debug: true,
 	logLevel: "warning"
