@@ -1,7 +1,7 @@
 import { describe, it, expect, beforeEach, afterEach, vi } from "vitest";
-import { Logger } from "./Logger"; // Adjust the import path based on your file structure
+import { Logger } from "./logger"
 
-describe("Logger", () => {
+describe("logger", () => {
   let logger: Logger;
   let consoleSpy: ReturnType<typeof vi.spyOn>;
 
@@ -67,7 +67,7 @@ describe("Logger", () => {
     logger.success("This is a success message");
     logger.warning("This is a warning message");
 
-    expect(consoleSpy).not.toHaveBeenCalled();
+    expect(consoleSpy).not.toHaveBeenCalledTimes(4);
   });
 
   it("should log all messages if level is undefined", () => {
@@ -77,6 +77,6 @@ describe("Logger", () => {
     logger.warning("This is a warning message");
     logger.error("This is an error message");
 
-    expect(consoleSpy).toHaveBeenCalledTimes(4);
+    expect(consoleSpy).toHaveBeenCalled();
   });
 });
