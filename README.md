@@ -29,6 +29,16 @@ const sdkInstance = uniFarcasterSdk({
 	activeService: 'neynar' //It's ingnored and automatically set to airstack
 })
 
+//Debug Mode
+const sdkInstance = uniFarcasterSdk({
+	...otherConfigOptions
+  debug: true, //Logs every query on the console with the active service used for it,
+  logLevel: "info"| "warn"| "error"| "success"
+  //Optional and only used when debug is true.
+  // By default, all query is logged but setting the log level will only log queries with the specified level
+})
+
+
 //Both
 const sdkInstance = uniFarcasterSdk({
 	neynarApiKey: 'your-neynar-api-key',
@@ -36,6 +46,7 @@ const sdkInstance = uniFarcasterSdk({
 	//You should specify if you prefer neynar or airstack else it randomly choses one of them
 	activeService: 'airstack',
 })
+
 
 //Get Active Service
 sdkInstance.getActiveService() //airstack
@@ -110,10 +121,9 @@ All queries don't throw errors but return an object
 ```ts
 {data: PossibleReturnedValue | null, error: any | null}
 ```
-Check if error is not null to know if there was an error and handle it accordingly.
+Check if error is not null to knowif there was an error and handle it accordingly.
 
 ## TODO
-- Add a logger and debug mode that logs the query, and active service when called
 - Add an optional `retry` config to all queries and the option to switch service if there's an error
 i.e If the current active service is airstack and the query fails, it will try to use neynar`
 - Add a cache to all queries.
