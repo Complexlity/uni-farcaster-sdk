@@ -33,7 +33,7 @@ const sdkInstance = uniFarcasterSdk({
 const sdkInstance = uniFarcasterSdk({
 	neynarApiKey: 'your-neynar-api-key',
 	airstackApiKey: 'your-airstack-api-key',
-	//You should specify if you prefer neynar or airstack else is randomly chose one of them
+	//You should specify if you prefer neynar or airstack else it randomly choses one of them
 	activeService: 'airstack',
 })
 
@@ -67,7 +67,7 @@ await sdkInstance.getCastByHash(castHash, viewerFid)
 
 
 
-### Return Types
+## Return Types
 ```ts
 type User = {
   fid: number;
@@ -102,8 +102,21 @@ type Cast = {
 };
 ```
 
+## Error Handling
 
+By default, invalid configurations will throw an error.
+All queries don't throw errors but return an object
 
+```ts
+{data: PossibleReturnedValue | null, error: any | null}
+```
+Check if error is not null to know if there was an error and handle it accordingly.
+
+## TODO
+- Add an optional `retry` config to all queries and the option to switch service if there's an error
+i.e If the current active service is airstack and the query fails, it will try to use neynar`
+- Add a cache to all queries.
+i.e If you call the query with the same params twice, it will return the same result rather than making a new request
 
 
 
