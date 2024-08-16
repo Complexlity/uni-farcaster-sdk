@@ -65,6 +65,8 @@ export class airstackService implements Service {
 
   private getCastFromAirstackResult(castResult: AirstackCastQueryResult) {
     const convertedCast: Cast = {
+      hash: castResult.FarcasterCasts.Cast[0]!.hash,
+      url: castResult.FarcasterCasts.Cast[0]!.url,
       author: this.getUserFromAirstackSociaslResult(
         castResult.FarcasterCasts.Cast[0]!.castedBy
       ),

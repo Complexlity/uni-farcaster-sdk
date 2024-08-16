@@ -14,6 +14,8 @@ const socialReturnedQuery = `
       isFarcasterPowerUser`;
 
 const castReturnedQuery = `
+      url
+      hash
 			embeds
       text
       channel {
