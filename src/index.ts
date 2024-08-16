@@ -1,8 +1,9 @@
-import { Cast, Config, DataOrError, Service } from "@/types";
+import { Cast, Config, DataOrError, Service, User, UserWithOptionalViewerContext } from "@/types";
 import { services, TService } from "@/services";
 import { isAddress } from "@/utils";
 import { DEFAULTS } from "@/constants";
 import { Logger, LogLevel, Noop } from "@/logger";
+import { Cache, CacheKeys, CacheTypes, StringOrNumberArray } from "@/cache";
 
 class uniFarcasterSdk implements Omit<Service, "name"> {
   private neynarApiKey: string | undefined;
@@ -11,18 +12,52 @@ class uniFarcasterSdk implements Omit<Service, "name"> {
   private activeService: Service | undefined;
   private debug: boolean = false;
   private logLevel: LogLevel | undefined;
+  private cache: Cache = new Cache();
   constructor(config: Config) {
-    const { activeServiceName, neynarApiKey, airstackApiKey, debug, logLevel } =
-      evaluateConfig(config);
+    const {
+      activeServiceName,
+      neynarApiKey,
+      airstackApiKey,
+      debug,
+      logLevel,
+      cacheTtl,
+    } = evaluateConfig(config);
     this.neynarApiKey = neynarApiKey;
     this.airstackApiKey = airstackApiKey;
     this.activeService = this.createService(activeServiceName);
     this.logLevel = logLevel;
     this.debug = debug;
+    if (cacheTtl) {
+      this.cache = new Cache({ ttl: cacheTtl });
+    }
+  }
+
+  private async withCache<T extends CacheKeys, >(
+    type: T,
+    fn: (...args: any[]) => Promise<DataOrError<CacheTypes[T]>>,
+    params: StringOrNumberArray
+  ) {
+    const cachedData = this.cache.get(type, params);
+    if (cachedData) {
+      this.logger({ name: "Cache Hit" }).success(`${params.join(" ")}`)
+      return {
+        data: cachedData as CacheTypes[T],
+        error: null
+      }
+    }
+    this.logger({ name: "Cache Miss" }).error(`${params.join(" ")}`);
+    const result = await fn.apply(this.activeService, params);
+    const { data, error } = result;
+    if (data) {
+      //First params is the fid or username and we don't want to add that since we would get that from data
+      const setParams = params.slice(1)
+      this.cache.set(type, data, setParams);
+    }
+    return result;
   }
 
   private logger(service: { name: string } = { name: "Main" }) {
-    if(!this.debug) return new Noop();
+    if (!this.debug) return new Noop();
     return new Logger(service.name, this.logLevel);
   }
 
@@ -50,18 +85,21 @@ class uniFarcasterSdk implements Omit<Service, "name"> {
   }
 
   public setActiveService(service: TService) {
-      this.logger().info(`setting Active to: ${service}`);
+    this.logger().info(`setting Active to: ${service}`);
     this.activeService = this.createService(service);
-      this.logger().info(`active service: ${this.activeService!.name}`);
+    this.logger().info(`active service: ${this.activeService!.name}`);
   }
 
   public async getUserByFid(fid: number, viewerFid: number = DEFAULTS.fid) {
-      this.logger(this.activeService!).info(
-        `fetching user by fid: ${fid} ${
-          viewerFid ? `and viewerFid: ${viewerFid}` : ""
-        }`
-      );
-    const res = await this.activeService!.getUserByFid(fid, viewerFid);
+    this.logger(this.activeService!).info(
+      `fetching user by fid: ${fid} ${
+        viewerFid ? `and viewerFid: ${viewerFid}` : ""
+      }`
+    );
+    const res = await this.withCache("user", this.activeService!.getUserByFid, [
+      fid,
+      viewerFid,
+    ]) as DataOrError<User>;
     if (this.debug && res.error) {
       this.logger(this.activeService!).error(
         `failed to fetch user by fid: ${fid} ${
@@ -82,21 +120,17 @@ class uniFarcasterSdk implements Omit<Service, "name"> {
     username: string,
     viewerFid: number = DEFAULTS.fid
   ) {
-
-      this.logger(this.activeService!).info(
-        `fetching user by username: ${username} ${
-          viewerFid ? `and viewerFid: ${viewerFid}` : ""
-        }`
-      );
-      if (this.activeService!.name === "airstack") {
-        this.logger(this.activeService!).warning(
-          "viewer context is not returned when fetching by username with airstack. Fetch by fid instead or use neynar service"
-        );
-    }
-    const res = await this.activeService!.getUserByUsername(
-      username,
-      viewerFid
+    this.logger(this.activeService!).info(
+      `fetching user by username: ${username} ${
+        viewerFid ? `and viewerFid: ${viewerFid}` : ""
+      }`
     );
+    if (this.activeService!.name === "airstack") {
+      this.logger(this.activeService!).warning(
+        "viewer context is not returned when fetching by username with airstack. Fetch by fid instead or use neynar service"
+      );
+    }
+    const res = await this.withCache("user", this.activeService!.getUserByUsername, [username, viewerFid])
     if (res.error) {
       this.logger(this.activeService!).error(
         `Failed to fetch user by username: ${username} ${
@@ -118,7 +152,9 @@ class uniFarcasterSdk implements Omit<Service, "name"> {
     let res: DataOrError<Cast>;
     if (!isValidHash) {
       res = { data: null, error: { message: "Invalid hash" } };
-    } else res = await this.activeService!.getCastByHash(hash, viewerFid);
+    } else {
+      res = await this.withCache("cast", this.activeService!.getCastByHash, [hash, viewerFid]);
+    }
     if (res.error) {
       this.logger(this.activeService!).error(
         `failed to fetch cast by hash: ${hash} ${
@@ -136,12 +172,12 @@ class uniFarcasterSdk implements Omit<Service, "name"> {
   }
 
   public async getCastByUrl(url: string, viewerFid: number = DEFAULTS.fid) {
-      this.logger(this.activeService!).info(
-        `fetching cast by url: ${url} ${
-          viewerFid ? `and viewerFid: ${viewerFid}` : ""
-        }`
-      );
-    const res = await this.activeService!.getCastByUrl(url, viewerFid);
+    this.logger(this.activeService!).info(
+      `fetching cast by url: ${url} ${
+        viewerFid ? `and viewerFid: ${viewerFid}` : ""
+      }`
+    );
+    const res = await this.withCache("cast", this.activeService!.getCastByUrl, [url, viewerFid]);
     if (res.error) {
       this.logger(this.activeService!).error(
         `failed to fetch cast by url: ${url} ${
@@ -165,6 +201,7 @@ function evaluateConfig(config: Config) {
   let neynarApiKey: string | undefined;
   let debug: boolean = false;
   let logLevel: LogLevel | undefined = undefined;
+  let cacheTtl: number | undefined = undefined;
   if (
     "neynarApiKey" in config &&
     "airstackApiKey" in config &&
@@ -200,8 +237,12 @@ function evaluateConfig(config: Config) {
       }
     }
   }
+  if ("cacheTtl" in config) {
+    cacheTtl = config.cacheTtl;
+  }
 
-  return { activeServiceName, neynarApiKey, airstackApiKey, debug, logLevel };
+  return { activeServiceName, neynarApiKey, airstackApiKey, debug, logLevel, cacheTtl };
 }
 
 export default uniFarcasterSdk;
+export * from './cache'

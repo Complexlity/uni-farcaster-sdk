@@ -65,9 +65,16 @@ export class neynarService implements Service {
     };
   }
 
+  private makeCastUrlFromHash(username: string, hash: string) {
+    return `https://warpcast.com/${username}/${hash.slice(0, 10)}`;
+  }
+
+
   private getCastFromNeynarResponse(cast: NeynarCast): Cast {
     return {
       author: this.getUserFromNeynarResponse(cast.author),
+      hash: cast.hash,
+      url: this.makeCastUrlFromHash(cast.author.username, cast.hash),
       userReactions: {
         likes: cast.reactions.likes_count,
         recasts: cast.reactions.recasts_count,
@@ -107,7 +114,7 @@ export class neynarService implements Service {
     async getUserByUsername(
     username: string,
     viewerFid?: number
-  ): Promise<DataOrError<Omit<User, "powerBadge">>> {
+    ): Promise<DataOrError<Omit<User, "powerBadge">>> {
     try {
       const usersInfo = await api.get<{ result: { user: any } }>(
         "/v1/farcaster/user-by-username",
@@ -167,6 +174,7 @@ export class neynarService implements Service {
 
       const cast = castInfo.data.cast;
       const returnedCast = this.getCastFromNeynarResponse(cast);
+      returnedCast.url = url;
       return { data: returnedCast, error: null };
     } catch (e) {
       return this.handleError(e);
