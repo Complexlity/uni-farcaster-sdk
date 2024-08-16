@@ -1,6 +1,6 @@
 import { expect, test } from "vitest";
 import { neynarService } from ".";
-import { runBasicTests } from "../../utils";
+import { runBasicTests } from "../../lib/utils";
 
 const service = new neynarService("test-api-key");
 

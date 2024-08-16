@@ -1,6 +1,7 @@
 import { expect, test } from "vitest";
 import { hubService } from ".";
-import { runBasicTests } from "../../utils";
+import { runBasicTests } from
+"../../lib/utils";
 
 const service = new hubService("https://testhub.com");
 

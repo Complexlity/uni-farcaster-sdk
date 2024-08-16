@@ -1,5 +1,4 @@
-import { Service } from "@/types";
-import { User, Cast, DataOrError } from "@/types";
+import { User, Cast, DataOrError, Service } from "@/lib/types";
 import { init, fetchQuery } from "@airstack/node";
 import {
   castByHashQuery,

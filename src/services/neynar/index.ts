@@ -1,4 +1,4 @@
-import { Cast, Service, User, DataOrError } from "@/types";
+import { Cast, Service, User, DataOrError } from "@/lib/types";
 import axios from "axios";
 import {
   CastFetchResult,
@@ -8,7 +8,7 @@ import {
 } from "./utils";
 import { TService } from "@/services";
 import { AxiosError } from "axios";
-import { DEFAULTS } from "@/constants";
+import { DEFAULTS } from "@/lib/constants";
 
 const BASE_URL = "https://api.neynar.com";
 const api = axios.create({
@@ -20,21 +20,23 @@ export class neynarService implements Service {
   public name: TService = "neynar";
 
   constructor(apiKey: string) {
-     if (!apiKey) {
-       throw new Error(
-         "Attempt to use an neynar API without first providing an api key"
-       );
-     }
+    if (!apiKey) {
+      throw new Error(
+        "Attempt to use an neynar API without first providing an api key"
+      );
+    }
     this.apiKey = apiKey;
   }
 
   private handleError(e: any) {
-    if(e instanceof AxiosError) {
-        return { data: null, error: {message: e.response?.data?.error.message} };
-      }
-      return { data: null, error: e };
+    if (e instanceof AxiosError) {
+      return {
+        data: null,
+        error: { message: e.response?.data?.error.message },
+      };
     }
-
+    return { data: null, error: e };
+  }
 
   private getHeaders() {
     return {
@@ -68,7 +70,6 @@ export class neynarService implements Service {
   private makeCastUrlFromHash(username: string, hash: string) {
     return `https://warpcast.com/${username}/${hash.slice(0, 10)}`;
   }
-
 
   private getCastFromNeynarResponse(cast: NeynarCast): Cast {
     return {
@@ -108,13 +109,13 @@ export class neynarService implements Service {
       const returnedUser = this.getUserFromNeynarResponse(user);
       return { data: returnedUser, error: null };
     } catch (e) {
-      return this.handleError(e)
+      return this.handleError(e);
     }
   }
-    async getUserByUsername(
+  async getUserByUsername(
     username: string,
     viewerFid?: number
-    ): Promise<DataOrError<Omit<User, "powerBadge">>> {
+  ): Promise<DataOrError<Omit<User, "powerBadge">>> {
     try {
       const usersInfo = await api.get<{ result: { user: any } }>(
         "/v1/farcaster/user-by-username",

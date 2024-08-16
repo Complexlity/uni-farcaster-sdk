@@ -1,7 +1,8 @@
 import { afterEach, beforeEach, describe, expect, test, vi } from "vitest";
 import uniFarcasterSdk from ".";
-import { runBasicTests } from "./utils";
+import { runBasicTests } from "./lib/utils";
 import { services } from "./services";
+import { Cache } from "./lib/cache";
 
 const service = new uniFarcasterSdk({
   neynarApiKey: "test-neynar-api-key",
@@ -9,8 +10,8 @@ const service = new uniFarcasterSdk({
   activeService: "neynar",
 });
 
-  let consoleSpy: ReturnType<typeof vi.spyOn>;
-  consoleSpy = vi.spyOn(console, "log").mockImplementation(() => {});
+let consoleSpy: ReturnType<typeof vi.spyOn>;
+consoleSpy = vi.spyOn(console, "log").mockImplementation(() => {});
 
 runBasicTests(service);
 
@@ -29,9 +30,9 @@ test("it should pick a default service randomly if no active service is provided
   const service = new uniFarcasterSdk({
     neynarApiKey: "test-neynar-api-key",
     airstackApiKey: "test-airstack-api-key",
-	});
-	const expectArray = Object.keys(services);
-	const activeService = service.getActiveService();
+  });
+  const expectArray = Object.keys(services);
+  const activeService = service.getActiveService();
   expect(expectArray).toContain(activeService);
 });
 
@@ -52,11 +53,9 @@ test("it should error if api key is not provided", async () => {
   ).toThrowError();
 });
 
-
 test("it should not error if not config is not provided", async () => {
   expect(() => new uniFarcasterSdk({})).toThrowError();
 });
-
 
 describe("debug mode", () => {
   let consoleSpy: ReturnType<typeof vi.spyOn>;
@@ -101,5 +100,124 @@ describe("debug mode", () => {
 
     service.getActiveService();
     expect(consoleSpy).not.toHaveBeenCalled();
+  });
+});
+
+describe("main cache", () => {
+  let sdk: uniFarcasterSdk;
+  let mockService: any;
+
+  beforeEach(() => {
+    mockService = {
+      name: "mockService",
+      getUserByFid: vi.fn(),
+      getUserByUsername: vi.fn(),
+      getCastByHash: vi.fn(),
+      getCastByUrl: vi.fn(),
+    };
+
+    sdk = new uniFarcasterSdk({ neynarApiKey: "mock-key" });
+    // @ts-expect-error Accessing private property for testing
+    sdk.activeService = mockService;
+    // @ts-expect-error Accessing private property for testing
+    sdk.cache = new Cache();
+  });
+
+  test("should use cache for getUserByFid", async () => {
+    const mockUser = { fid: 123, username: "testuser" };
+    mockService.getUserByFid.mockResolvedValueOnce({
+      data: mockUser,
+      error: null,
+    });
+
+    // First call should hit the service
+    const result1 = await sdk.getUserByFid(123);
+    expect(result1.data).toEqual(mockUser);
+    expect(mockService.getUserByFid).toHaveBeenCalledTimes(1);
+
+    // Second call should use cache
+    const result2 = await sdk.getUserByFid(mockUser.fid);
+    expect(result2.data).toEqual(mockUser);
+    expect(mockService.getUserByFid).toHaveBeenCalledTimes(1); // Still 1, not 2
+
+    // Second call should use cache
+    const result3 = await sdk.getUserByUsername(mockUser.username);
+    expect(result3.data).toEqual(mockUser);
+    expect(mockService.getUserByUsername).not.toBeCalled(); // Still 1, not 2
+  });
+
+  test("should use cache for getUserByUsername", async () => {
+    const mockUser = { fid: 123, username: "testuser" };
+    mockService.getUserByUsername.mockResolvedValueOnce({
+      data: mockUser,
+      error: null,
+    });
+
+    // First call should hit the service
+    const result1 = await sdk.getUserByUsername(mockUser.username);
+    expect(result1.data).toEqual(mockUser);
+    expect(mockService.getUserByUsername).toHaveBeenCalledTimes(1);
+
+    // Second call should use cache
+    const result2 = await sdk.getUserByUsername(mockUser.username);
+    expect(result2.data).toEqual(mockUser);
+    expect(mockService.getUserByUsername).toHaveBeenCalledTimes(1); // Still 1, not 2
+
+    // Third call with fid should still use cache
+    const result3 = await sdk.getUserByFid(mockUser.fid);
+    expect(result3.data).toEqual(mockUser);
+    expect(mockService.getUserByFid).not.toBeCalled();
+  });
+
+  test("should use cache for getCastByHash", async () => {
+    const mockCast = {
+      hash: "0x59821dAf7b797D926440C9088bb91e018d6556B8",
+      url: "https://example.com/cast/123",
+    };
+    mockService.getCastByHash.mockResolvedValueOnce({
+      data: mockCast,
+      error: null,
+    });
+
+    // First call should hit the service
+    const result1 = await sdk.getCastByHash(mockCast.hash);
+    expect(result1.data).toEqual(mockCast);
+    expect(mockService.getCastByHash).toHaveBeenCalledTimes(1);
+
+    // Second call should use cache
+    const result2 = await sdk.getCastByHash(mockCast.hash);
+    expect(result2.data).toEqual(mockCast);
+    expect(mockService.getCastByHash).toHaveBeenCalledTimes(1); // Still 1, not 2
+
+    // Call by url should still use cache
+    const result3 = await sdk.getCastByUrl(mockCast.url);
+    expect(result3.data).toEqual(mockCast);
+    expect(mockService.getCastByUrl).not.toBeCalled();
+  });
+
+  test("should use cache for getCastByUrl", async () => {
+    const mockCast = {
+      url: "https://example.com/cast/123",
+      hash: "0x59821dAf7b797D926440C9088bb91e018d6556B8",
+    };
+    mockService.getCastByUrl.mockResolvedValueOnce({
+      data: mockCast,
+      error: null,
+    });
+
+    // First call should hit the service
+    const result1 = await sdk.getCastByUrl(mockCast.url);
+    expect(result1.data).toEqual(mockCast);
+    expect(mockService.getCastByUrl).toHaveBeenCalledTimes(1);
+
+    // Second call should use cache
+    const result2 = await sdk.getCastByUrl(mockCast.url);
+    expect(result2.data).toEqual(mockCast);
+    expect(mockService.getCastByUrl).toHaveBeenCalledTimes(1);
+
+    // Call by hash should still use cache
+    const result3 = await sdk.getCastByHash(mockCast.hash);
+    expect(result3.data).toEqual(mockCast);
+    expect(mockService.getCastByHash).not.toHaveBeenCalled();
   });
 });

@@ -1,9 +1,15 @@
-import { Cast, Config, DataOrError, Service, User, UserWithOptionalViewerContext } from "@/types";
+import { Cache, CacheKeys, CacheTypes, StringOrNumberArray } from "@/lib/cache";
+import { DEFAULTS } from "@/lib/constants";
+import { Logger, LogLevel, Noop } from "@/lib/logger";
+import {
+  Cast,
+  Config,
+  DataOrError,
+  Service,
+  User
+} from "@/lib/types";
+import { isAddress } from "@/lib/utils";
 import { services, TService } from "@/services";
-import { isAddress } from "@/utils";
-import { DEFAULTS } from "@/constants";
-import { Logger, LogLevel, Noop } from "@/logger";
-import { Cache, CacheKeys, CacheTypes, StringOrNumberArray } from "@/cache";
 
 class uniFarcasterSdk implements Omit<Service, "name"> {
   private neynarApiKey: string | undefined;
@@ -32,25 +38,25 @@ class uniFarcasterSdk implements Omit<Service, "name"> {
     }
   }
 
-  private async withCache<T extends CacheKeys, >(
+  private async withCache<T extends CacheKeys>(
     type: T,
     fn: (...args: any[]) => Promise<DataOrError<CacheTypes[T]>>,
     params: StringOrNumberArray
   ) {
     const cachedData = this.cache.get(type, params);
     if (cachedData) {
-      this.logger({ name: "Cache Hit" }).success(`${params.join(" ")}`)
+      this.logger({ name: "Cache Hit" }).success(`${params.join(" ")}`);
       return {
-        data: cachedData as CacheTypes[T],
-        error: null
-      }
+        data: cachedData,
+        error: null,
+      };
     }
     this.logger({ name: "Cache Miss" }).error(`${params.join(" ")}`);
     const result = await fn.apply(this.activeService, params);
     const { data, error } = result;
     if (data) {
       //First params is the fid or username and we don't want to add that since we would get that from data
-      const setParams = params.slice(1)
+      const setParams = params.slice(1);
       this.cache.set(type, data, setParams);
     }
     return result;
@@ -96,10 +102,11 @@ class uniFarcasterSdk implements Omit<Service, "name"> {
         viewerFid ? `and viewerFid: ${viewerFid}` : ""
       }`
     );
-    const res = await this.withCache("user", this.activeService!.getUserByFid, [
-      fid,
-      viewerFid,
-    ]) as DataOrError<User>;
+    const res = (await this.withCache(
+      "user",
+      this.activeService!.getUserByFid,
+      [fid, viewerFid]
+    )) as DataOrError<User>;
     if (this.debug && res.error) {
       this.logger(this.activeService!).error(
         `failed to fetch user by fid: ${fid} ${
@@ -130,7 +137,11 @@ class uniFarcasterSdk implements Omit<Service, "name"> {
         "viewer context is not returned when fetching by username with airstack. Fetch by fid instead or use neynar service"
       );
     }
-    const res = await this.withCache("user", this.activeService!.getUserByUsername, [username, viewerFid])
+    const res = await this.withCache(
+      "user",
+      this.activeService!.getUserByUsername,
+      [username, viewerFid]
+    );
     if (res.error) {
       this.logger(this.activeService!).error(
         `Failed to fetch user by username: ${username} ${
@@ -153,7 +164,10 @@ class uniFarcasterSdk implements Omit<Service, "name"> {
     if (!isValidHash) {
       res = { data: null, error: { message: "Invalid hash" } };
     } else {
-      res = await this.withCache("cast", this.activeService!.getCastByHash, [hash, viewerFid]);
+      res = await this.withCache("cast", this.activeService!.getCastByHash, [
+        hash,
+        viewerFid,
+      ]);
     }
     if (res.error) {
       this.logger(this.activeService!).error(
@@ -177,7 +191,10 @@ class uniFarcasterSdk implements Omit<Service, "name"> {
         viewerFid ? `and viewerFid: ${viewerFid}` : ""
       }`
     );
-    const res = await this.withCache("cast", this.activeService!.getCastByUrl, [url, viewerFid]);
+    const res = await this.withCache("cast", this.activeService!.getCastByUrl, [
+      url,
+      viewerFid,
+    ]);
     if (res.error) {
       this.logger(this.activeService!).error(
         `failed to fetch cast by url: ${url} ${
@@ -241,8 +258,15 @@ function evaluateConfig(config: Config) {
     cacheTtl = config.cacheTtl;
   }
 
-  return { activeServiceName, neynarApiKey, airstackApiKey, debug, logLevel, cacheTtl };
+  return {
+    activeServiceName,
+    neynarApiKey,
+    airstackApiKey,
+    debug,
+    logLevel,
+    cacheTtl,
+  };
 }
 
 export default uniFarcasterSdk;
-export * from './cache'
+export * from "./lib/cache";
