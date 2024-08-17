@@ -20,7 +20,7 @@ export class Cache {
   >();
   public ttl: number;
   constructor(config: CacheConfig = {ttl: DEFAULTS.cacheTtl}) {
-      this.ttl = config.ttl || DEFAULTS.cacheTtl;
+      this.ttl = config.ttl;
     }
 
 
@@ -33,7 +33,11 @@ export class Cache {
     if (cachedData && cachedData.timestamp + this.ttl > Date.now()) {
       return cachedData.data as T;
     }
-    return null;
+
+    if (cachedData) {
+      this.cache.delete(key);
+    }
+    return null ;
   }
 
   private getUserCachedData(params: StringOrNumberArray) {
@@ -95,7 +99,7 @@ export class Cache {
 }
 
 type CacheConfig = {
-  ttl?: number;
+  ttl: number;
 };
 
 export type CacheTypes = {

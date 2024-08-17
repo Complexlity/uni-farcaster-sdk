@@ -10,7 +10,7 @@
     "url": "https://github.com/Complexlity/uni-farcaster-sdk"
   },
   "scripts": {
-    "test:dev": "vitest",
+    "dev": "vitest",
     "test": "vitest run",
     "build": "tsup src/index.ts --format cjs,esm --dts",
     "lint": "tsc",

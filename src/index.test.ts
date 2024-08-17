@@ -10,6 +10,8 @@ const service = new uniFarcasterSdk({
   activeService: "neynar",
 });
 
+const mockUser = { fid: 123, username: "testuser" };
+
 let consoleSpy: ReturnType<typeof vi.spyOn>;
 consoleSpy = vi.spyOn(console, "log").mockImplementation(() => {});
 
@@ -124,14 +126,13 @@ describe("main cache", () => {
   });
 
   test("should use cache for getUserByFid", async () => {
-    const mockUser = { fid: 123, username: "testuser" };
     mockService.getUserByFid.mockResolvedValueOnce({
       data: mockUser,
       error: null,
     });
 
     // First call should hit the service
-    const result1 = await sdk.getUserByFid(123);
+    const result1 = await sdk.getUserByFid(mockUser.fid);
     expect(result1.data).toEqual(mockUser);
     expect(mockService.getUserByFid).toHaveBeenCalledTimes(1);
 
@@ -147,7 +148,6 @@ describe("main cache", () => {
   });
 
   test("should use cache for getUserByUsername", async () => {
-    const mockUser = { fid: 123, username: "testuser" };
     mockService.getUserByUsername.mockResolvedValueOnce({
       data: mockUser,
       error: null,
@@ -172,7 +172,7 @@ describe("main cache", () => {
   test("should use cache for getCastByHash", async () => {
     const mockCast = {
       hash: "0x59821dAf7b797D926440C9088bb91e018d6556B8",
-      url: "https://example.com/cast/123",
+      url: "https://example.com/cast/mockUser.fid",
     };
     mockService.getCastByHash.mockResolvedValueOnce({
       data: mockCast,
@@ -197,7 +197,7 @@ describe("main cache", () => {
 
   test("should use cache for getCastByUrl", async () => {
     const mockCast = {
-      url: "https://example.com/cast/123",
+      url: "https://example.com/cast/mockUser.fid",
       hash: "0x59821dAf7b797D926440C9088bb91e018d6556B8",
     };
     mockService.getCastByUrl.mockResolvedValueOnce({
@@ -219,5 +219,76 @@ describe("main cache", () => {
     const result3 = await sdk.getCastByHash(mockCast.hash);
     expect(result3.data).toEqual(mockCast);
     expect(mockService.getCastByHash).not.toHaveBeenCalled();
+  });
+});
+
+describe("uniFarcasterSdk Cache with cacheTtl", () => {
+  let mockService: any;
+
+  beforeEach(() => {
+    mockService = {
+      name: "mockService",
+      getUserByFid: vi.fn(),
+    };
+  });
+
+  test("should use cache when cacheTtl is not 0", async () => {
+    const sdk = new uniFarcasterSdk({
+      neynarApiKey: "mock-key",
+      cacheTtl: 3000,
+    });
+    // @ts-expect-error Accessing private property for testing
+    sdk.activeService = mockService;
+
+    mockService.getUserByFid.mockResolvedValue({ data: mockUser, error: null });
+
+    // First call should hit the service
+    await sdk.getUserByFid(mockUser.fid);
+    expect(mockService.getUserByFid).toHaveBeenCalledTimes(1);
+
+    // Second call should use cache
+    await sdk.getUserByFid(mockUser.fid);
+    expect(mockService.getUserByFid).toHaveBeenCalledTimes(1); 
+  });
+
+  test("should bypass cache when cacheTtl is 0", async () => {
+    const sdk = new uniFarcasterSdk({ neynarApiKey: "mock-key", cacheTtl: 0 });
+    // @ts-expect-error Accessing private property for testing
+    sdk.activeService = mockService;
+
+
+    mockService.getUserByFid.mockResolvedValue({ data: mockUser, error: null });
+
+    // First call should hit the service
+    await sdk.getUserByFid(mockUser.fid);
+    expect(mockService.getUserByFid).toHaveBeenCalledTimes(1);
+
+    // Second call should also hit the service, bypassing cache
+    await sdk.getUserByFid(mockUser.fid);
+    expect(mockService.getUserByFid).toHaveBeenCalledTimes(2);
+  });
+
+  test("should expire cache after cacheTtl", async () => {
+    const cacheTtl = 100;
+    const sdk = new uniFarcasterSdk({ neynarApiKey: "mock-key", cacheTtl });
+    // @ts-expect-error Accessing private property for testing
+    sdk.activeService = mockService;
+
+    mockService.getUserByFid.mockResolvedValue({ data: mockUser, error: null });
+
+    // First call should hit the service
+    await sdk.getUserByFid(mockUser.fid);
+    expect(mockService.getUserByFid).toHaveBeenCalledTimes(1);
+
+    // Second call should use cache
+    await sdk.getUserByFid(mockUser.fid);
+    expect(mockService.getUserByFid).toHaveBeenCalledTimes(1); // Still 1, cache hit
+
+    // Wait for cache to expire
+    await new Promise((resolve) => setTimeout(resolve, cacheTtl + 10)); // Wait just a bit longer than TTL
+
+    // Third call should hit the service again
+    await sdk.getUserByFid(mockUser.fid);
+    expect(mockService.getUserByFid).toHaveBeenCalledTimes(2);
   });
 });

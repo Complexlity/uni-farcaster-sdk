@@ -86,10 +86,66 @@ describe("cache", () => {
     expect(() => cache.set("invalid", {}, [])).toThrow("Invalid cache type");
   });
 
+
+});
+
+describe("cache with custom TTL", () => {
   test("should use custom TTL when provided", () => {
-    const customTtl = 1000; // 1 second
+    const customTtl = 1000;
     const customCache = new Cache({ ttl: customTtl });
 
     expect(customCache.ttl).toBe(customTtl);
   });
-});
+
+  test("should use default TTL when not provided", () => {
+    const defaultTtl = DEFAULTS.cacheTtl;
+    const defaultCache = new Cache();
+
+    expect(defaultCache.ttl).toBe(defaultTtl);
+  });
+
+  test("should return null when invalidated", () => {
+    const cache = new Cache({ ttl: 0 });
+    const user: User = dummyUser;
+
+    cache.set("user", user, [dummyViewerFid]);
+
+    const cachedUserByFid = cache.get("user", [user.fid, dummyViewerFid]);
+    expect(cachedUserByFid).toBeNull();
+
+    const cachedUserByUsername = cache.get("user", [
+      user.username,
+      dummyViewerFid,
+    ]);
+    expect(cachedUserByUsername).toBeNull();
+  });
+
+  test("should return null or result depending on ttl", async () => {
+    const cacheTtl = 100
+    const cache = new Cache({ ttl: cacheTtl });
+    const user: User = dummyUser;
+
+    cache.set("user", user, [dummyViewerFid]);
+
+    const cachedUserByFid = cache.get("user", [user.fid, dummyViewerFid]);
+    expect(cachedUserByFid).toEqual(user);
+
+    const cachedUserByUsername = cache.get("user", [
+      user.username,
+      dummyViewerFid,
+    ]);
+    expect(cachedUserByUsername).toEqual(user);
+
+    // Wait for cache to expire
+    await new Promise((resolve) => setTimeout(resolve, cacheTtl + 10));
+
+    const cachedUserByFid2 = cache.get("user", [user.fid, dummyViewerFid]);
+    expect(cachedUserByFid2).toBeNull();
+
+    const cachedUserByUsername2 = cache.get("user", [
+      user.username,
+      dummyViewerFid,
+    ]);
+    expect(cachedUserByUsername2).toBeNull();
+  });
+})
