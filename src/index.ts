@@ -1,13 +1,7 @@
 import { Cache, CacheKeys, CacheTypes, StringOrNumberArray } from "@/lib/cache";
 import { DEFAULTS } from "@/lib/constants";
 import { Logger, LogLevel, Noop } from "@/lib/logger";
-import {
-  Cast,
-  Config,
-  DataOrError,
-  Service,
-  User
-} from "@/lib/types";
+import { Cast, Config, DataOrError, Service, User } from "@/lib/types";
 import { isAddress } from "@/lib/utils";
 import { services, TService } from "@/services";
 
@@ -18,7 +12,7 @@ class uniFarcasterSdk implements Omit<Service, "name"> {
   private activeService: Service | undefined;
   private debug: boolean = false;
   private logLevel: LogLevel | undefined;
-  private cache: Cache = new Cache();
+  private cache: Cache = new Cache({ ttl: DEFAULTS.cacheTtl });
   constructor(config: Config) {
     const {
       activeServiceName,
@@ -33,9 +27,7 @@ class uniFarcasterSdk implements Omit<Service, "name"> {
     this.activeService = this.createService(activeServiceName);
     this.logLevel = logLevel;
     this.debug = debug;
-    if (cacheTtl) {
       this.cache = new Cache({ ttl: cacheTtl });
-    }
   }
 
   private async withCache<T extends CacheKeys>(
@@ -218,7 +210,7 @@ function evaluateConfig(config: Config) {
   let neynarApiKey: string | undefined;
   let debug: boolean = false;
   let logLevel: LogLevel | undefined = undefined;
-  let cacheTtl: number | undefined = undefined;
+  let cacheTtl: number = DEFAULTS.cacheTtl;
   if (
     "neynarApiKey" in config &&
     "airstackApiKey" in config &&
@@ -255,7 +247,10 @@ function evaluateConfig(config: Config) {
     }
   }
   if ("cacheTtl" in config) {
-    cacheTtl = config.cacheTtl;
+    let tempTtl = Number(config.cacheTtl);
+    if (!isNaN(tempTtl) && tempTtl >= 0) {
+      cacheTtl = tempTtl;
+    }
   }
 
   return {

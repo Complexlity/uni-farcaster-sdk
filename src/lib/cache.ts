@@ -1,3 +1,4 @@
+import { DEFAULTS } from "./constants";
 import {
   Cast,
   DataOrError,
@@ -17,12 +18,11 @@ export class Cache {
     string,
     MapData<User | UserWithOptionalViewerContext | Cast>
   >();
-  public ttl: number = 60 * 60 * 1000;
-  constructor(config: CacheConfig = {}) {
-    if (config.ttl) {
-      this.ttl = config.ttl;
+  public ttl: number;
+  constructor(config: CacheConfig = {ttl: DEFAULTS.cacheTtl}) {
+      this.ttl = config.ttl || DEFAULTS.cacheTtl;
     }
-  }
+
 
   public setTtl(ttl: number) {
     this.ttl = ttl;
@@ -30,7 +30,7 @@ export class Cache {
 
   private getData<T>(key: string): T | null {
     const cachedData = this.cache.get(key);
-    if (cachedData) {
+    if (cachedData && cachedData.timestamp + this.ttl > Date.now()) {
       return cachedData.data as T;
     }
     return null;

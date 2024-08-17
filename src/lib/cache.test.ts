@@ -1,5 +1,6 @@
 import { describe, test, expect, beforeEach } from "vitest";
 import { Cache } from "./cache";
+import { DEFAULTS } from "./constants";
 import { User, Cast } from "./types";
 const dummyUser: User = {
   fid: 123,
