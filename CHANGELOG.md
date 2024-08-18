@@ -1,5 +1,11 @@
 # uni-farcaster-sdk
 
+## 0.0.12
+
+### Patch Changes
+
+- 328181d: Feat: Add query caching and invalidation, remove dependencies
+
 ## 0.0.11
 
 ### Patch Changes
