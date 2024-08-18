@@ -24,13 +24,21 @@ const sdkInstance = uniFarcasterSdk({
 })
 
 // Invalid active service
-const sdkInstance = uniFarcasterSdk({
+const sdkInstance = newuniFarcasterSdk({
 	airstackApiKey: 'your-airstack-api-key',
 	activeService: 'neynar' //It's ingnored and automatically set to airstack
 })
 
+  //Both
+  const sdkInstance = new uniFarcasterSdk({
+    neynarApiKey: 'your-neynar-api-key',
+    airstackApiKey: 'your-airstack-api-key',
+    //You should specify if you prefer neynar or airstack else it randomly choses one of them
+    activeService: 'airstack',
+  })
+  
 //Debug Mode
-const sdkInstance = uniFarcasterSdk({
+const sdkInstance = new uniFarcasterSdk({
 	...otherConfigOptions
   debug: true, //Logs every query on the console with the active service used for it,
   logLevel: "info"| "warn"| "error"| "success"
@@ -39,13 +47,6 @@ const sdkInstance = uniFarcasterSdk({
 })
 
 
-//Both
-const sdkInstance = uniFarcasterSdk({
-	neynarApiKey: 'your-neynar-api-key',
-	airstackApiKey: 'your-airstack-api-key',
-	//You should specify if you prefer neynar or airstack else it randomly choses one of them
-	activeService: 'airstack',
-})
 
 
 //Get Active Service
@@ -126,8 +127,7 @@ Check if error is not null to knowif there was an error and handle it accordingl
 ## TODO
 - Add an optional `retry` config to all queries and the option to switch service if there's an error
 i.e If the current active service is airstack and the query fails, it will try to use neynar`
-- Add a cache to all queries.
-i.e If you call the query with the same params twice, it will return the same result rather than making a new request
+
 
 
 
