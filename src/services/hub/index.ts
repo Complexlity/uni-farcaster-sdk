@@ -1,4 +1,4 @@
-import { DataOrError, Service, User } from "@/types";
+import { DataOrError, Service, User } from "@/lib/types";
 import { TService } from "@/services";
 
 export class hubService implements Service {

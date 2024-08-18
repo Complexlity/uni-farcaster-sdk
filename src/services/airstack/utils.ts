@@ -1,3 +1,11 @@
+import { DEFAULTS } from "@/lib/constants";
+import { DataOrError } from "@/lib/types";
+import axios from "axios";
+
+const AIRSTACK_ENDPOINT =  DEFAULTS.airstackApiUrl;
+
+
+
 const socialReturnedQuery = `
 			userId
 			userAddress
@@ -14,6 +22,8 @@ const socialReturnedQuery = `
       isFarcasterPowerUser`;
 
 const castReturnedQuery = `
+      url
+      hash
 			embeds
       text
       channel {
@@ -117,3 +127,61 @@ export const castByUrlQuery = (castUrl: string, viewerFid: number) =>
   }
 }
 `;
+
+
+export async function _fetch<ResponseType = any>(
+  query: string,
+  authKey: string,
+): Promise<DataOrError<ResponseType>> {
+
+
+  try {
+    const response = await axios({
+      url: AIRSTACK_ENDPOINT,
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json",
+        Authorization: authKey,
+      },
+      data: {
+        query,
+        variables: {},
+      },
+    });
+
+    const data = response.data?.data;
+    let error = null;
+
+    if (response.data.errors || response.data.error) {
+      error = response.data.errors || response.data.error;
+    }
+    return { data, error };
+  } catch (error) {
+    if (axios.isAxiosError(error)) {
+      return { data: null, error: { message: error.message || "Unable to fetch data" } };
+    }
+    return { data: null, error: { message: "An unexpected error occurred" } };
+  }
+}
+
+export async function fetchGql<ResponseType = any>(
+  query: string,
+  authKey: string
+) {
+  return _fetch<ResponseType>(query, authKey);
+}
+
+
+export async function fetchQuery<T>(
+  query: string,
+  authKey: string,
+): Promise<DataOrError<T>> {
+
+
+  const { data, error } = await fetchGql<T>(query, authKey);
+
+  if (error) {
+    return { data: null, error };
+  }
+  return { data, error: null };
+}

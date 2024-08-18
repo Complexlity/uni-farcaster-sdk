@@ -64,7 +64,9 @@ export interface Cast {
 	channel:         Channel;
 	numberOfLikes:   number;
 	numberOfRecasts: number;
-	castedBy:        CastedBy;
+	castedBy: CastedBy;
+	url: string,
+	hash: string
 }
 
 export interface CastedBy {

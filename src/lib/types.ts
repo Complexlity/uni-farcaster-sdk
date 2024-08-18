@@ -1,5 +1,5 @@
 import { LogLevel } from "./logger";
-import { TService } from "./services";
+import { TService } from "../services";
 
 export type DataOrError<T> =
   | {
@@ -8,7 +8,7 @@ export type DataOrError<T> =
     }
   | {
       data: null;
-      error: any;
+      error: { message: string };
     };
 
 export type User = {
@@ -30,6 +30,8 @@ export type User = {
 
 export type Cast = {
   author: UserWithOptionalViewerContext;
+  hash: string;
+  url: string;
   userReactions: {
     likes: number;
     recasts: number;
@@ -44,7 +46,9 @@ export type Cast = {
 };
 type Prettify<T> = { [K in keyof T]: T[K] } & {};
 
-type UserWithOptionalViewerContext = Prettify<Omit<User, "viewerContext">> &
+export type UserWithOptionalViewerContext = Prettify<
+  Omit<User, "viewerContext">
+> &
   Partial<{ viewerContext: User["viewerContext"] }>;
 
 export interface Service {
@@ -58,25 +62,27 @@ export interface Service {
   getCastByUrl(url: string, viewerFid?: number): Promise<DataOrError<Cast>>;
 }
 
-export type Config =
-(| {
-    neynarApiKey: string;
-    airstackApiKey: string;
-    activeService: TService;
-  }
+export type Config = (
+  | {
+      neynarApiKey: string;
+      airstackApiKey: string;
+      activeService: TService;
+    }
   | {
       neynarApiKey: string;
     }
   | {
       airstackApiKey: string;
     }
-  ) & (
+) &
+  (
     | {
-    debug?: boolean
-
-    }
+        debug?: boolean;
+      }
     | {
-      debug: true,
-      logLevel?: LogLevel
-    }
-  )
+        debug: true;
+        logLevel?: LogLevel;
+      }
+  ) & {
+    cacheTtl?: number;
+  };

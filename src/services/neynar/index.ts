@@ -1,16 +1,14 @@
-import { Cast, Service, User, DataOrError } from "@/types";
+import { Cast, Service, User, DataOrError } from "@/lib/types";
 import axios from "axios";
 import {
-  CastFetchResult,
   convertToV2User,
-  NeynarCast,
-  NeynarUser,
 } from "./utils";
 import { TService } from "@/services";
 import { AxiosError } from "axios";
-import { DEFAULTS } from "@/constants";
+import { DEFAULTS } from "@/lib/constants";
+import { NeynarUser, NeynarCast, CastFetchResult } from "./types";
 
-const BASE_URL = "https://api.neynar.com";
+const BASE_URL = DEFAULTS.neynarApiUrl;
 const api = axios.create({
   baseURL: BASE_URL,
 });
@@ -20,21 +18,23 @@ export class neynarService implements Service {
   public name: TService = "neynar";
 
   constructor(apiKey: string) {
-     if (!apiKey) {
-       throw new Error(
-         "Attempt to use an neynar API without first providing an api key"
-       );
-     }
+    if (!apiKey) {
+      throw new Error(
+        "Attempt to use an neynar API without first providing an api key"
+      );
+    }
     this.apiKey = apiKey;
   }
 
   private handleError(e: any) {
-    if(e instanceof AxiosError) {
-        return { data: null, error: {message: e.response?.data?.error.message} };
-      }
-      return { data: null, error: e };
+    if (e instanceof AxiosError) {
+      return {
+        data: null,
+        error: { message: e.response?.data?.error.message },
+      };
     }
-
+    return { data: null, error: e };
+  }
 
   private getHeaders() {
     return {
@@ -65,9 +65,15 @@ export class neynarService implements Service {
     };
   }
 
+  private makeCastUrlFromHash(username: string, hash: string) {
+    return `https://warpcast.com/${username}/${hash.slice(0, 10)}`;
+  }
+
   private getCastFromNeynarResponse(cast: NeynarCast): Cast {
     return {
       author: this.getUserFromNeynarResponse(cast.author),
+      hash: cast.hash,
+      url: this.makeCastUrlFromHash(cast.author.username, cast.hash),
       userReactions: {
         likes: cast.reactions.likes_count,
         recasts: cast.reactions.recasts_count,
@@ -101,10 +107,10 @@ export class neynarService implements Service {
       const returnedUser = this.getUserFromNeynarResponse(user);
       return { data: returnedUser, error: null };
     } catch (e) {
-      return this.handleError(e)
+      return this.handleError(e);
     }
   }
-    async getUserByUsername(
+  async getUserByUsername(
     username: string,
     viewerFid?: number
   ): Promise<DataOrError<Omit<User, "powerBadge">>> {
@@ -167,6 +173,7 @@ export class neynarService implements Service {
 
       const cast = castInfo.data.cast;
       const returnedCast = this.getCastFromNeynarResponse(cast);
+      returnedCast.url = url;
       return { data: returnedCast, error: null };
     } catch (e) {
       return this.handleError(e);

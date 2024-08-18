@@ -1,4 +1,4 @@
-import { Service } from "@/types";
+import { Service } from "@/lib/types";
 import { expect, test } from 'vitest'
 
 export function isAddress(address: string): boolean  {
