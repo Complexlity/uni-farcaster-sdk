@@ -37,13 +37,13 @@ class uniFarcasterSdk implements Omit<Service, "name"> {
   ) {
     const cachedData = this.cache.get(type, params);
     if (cachedData) {
-      this.logger({ name: "Cache Hit" }).success(`${params.join(" ")}`);
+      this.logger({ name: "cache hit" }).success(`${params.join(" ")}`);
       return {
         data: cachedData,
         error: null,
       };
     }
-    this.logger({ name: "Cache Miss" }).error(`${params.join(" ")}`);
+    this.logger({ name: "cache miss" }).error(`${params.join(" ")}`);
     const result = await fn.apply(this.activeService, params);
     const { data, error } = result;
     if (data) {
@@ -54,7 +54,7 @@ class uniFarcasterSdk implements Omit<Service, "name"> {
     return result;
   }
 
-  private logger(service: { name: string } = { name: "Main" }) {
+  private logger(service: { name: string } = { name: "main" }) {
     if (!this.debug) return new Noop();
     return new Logger(service.name, this.logLevel);
   }
@@ -77,13 +77,13 @@ class uniFarcasterSdk implements Omit<Service, "name"> {
   public getActiveService() {
     if (this.debug) {
       const logger = this.logger();
-      logger.info("Active service: " + this.activeService!.name);
+      logger.info("active service: " + this.activeService!.name);
     }
     return this.activeService!.name;
   }
 
   public setActiveService(service: TService) {
-    this.logger().info(`setting Active to: ${service}`);
+    this.logger().info(`setting active to: ${service}`);
     this.activeService = this.createService(service);
     this.logger().info(`active service: ${this.activeService!.name}`);
   }
@@ -136,13 +136,13 @@ class uniFarcasterSdk implements Omit<Service, "name"> {
     );
     if (res.error) {
       this.logger(this.activeService!).error(
-        `Failed to fetch user by username: ${username} ${
+        `failed to fetch user by username: ${username} ${
           viewerFid ? `and viewerFid: ${viewerFid}` : ""
         }`
       );
     } else {
       this.logger(this.activeService!).success(
-        `Fetched user by username: ${username} ${
+        `fetched user by username: ${username} ${
           viewerFid ? `and viewerFid: ${viewerFid}` : ""
         }`
       );

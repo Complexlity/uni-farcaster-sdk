@@ -1,16 +1,14 @@
 import { Cast, Service, User, DataOrError } from "@/lib/types";
 import axios from "axios";
 import {
-  CastFetchResult,
   convertToV2User,
-  NeynarCast,
-  NeynarUser,
 } from "./utils";
 import { TService } from "@/services";
 import { AxiosError } from "axios";
 import { DEFAULTS } from "@/lib/constants";
+import { NeynarUser, NeynarCast, CastFetchResult } from "./types";
 
-const BASE_URL = "https://api.neynar.com";
+const BASE_URL = DEFAULTS.neynarApiUrl;
 const api = axios.create({
   baseURL: BASE_URL,
 });
