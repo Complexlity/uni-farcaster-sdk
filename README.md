@@ -13,18 +13,18 @@ npm install uni-farcaster-sdk
 import uniFarcasterSdk from 'uni-farcaster-sdk'
 
 // Neynar
-const sdkInstance = uniFarcasterSdk({
+const sdkInstance = new uniFarcasterSdk({
 	neynarApiKey: 'your-neynar-api-key',
 	activeService: 'neynar'//Optional. It's implied from the api key you provide
 })
 // Airstack
-const sdkInstance = uniFarcasterSdk({
+const sdkInstance = new uniFarcasterSdk({
 	airstackApiKey: 'your-airstack-api-key',
 	activeService: 'airstack' //Optional. It's implied from the api key you provide
 })
 
 // Invalid active service
-const sdkInstance = newuniFarcasterSdk({
+const sdkInstance = new uniFarcasterSdk({
 	airstackApiKey: 'your-airstack-api-key',
 	activeService: 'neynar' //It's ingnored and automatically set to airstack
 })
@@ -36,7 +36,7 @@ const sdkInstance = newuniFarcasterSdk({
     //You should specify if you prefer neynar or airstack else it randomly choses one of them
     activeService: 'airstack',
   })
-  
+
 //Debug Mode
 const sdkInstance = new uniFarcasterSdk({
 	...otherConfigOptions
