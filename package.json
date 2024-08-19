@@ -13,7 +13,9 @@
     "dev": "vitest",
     "test": "vitest run",
     "build": "tsup src/index.ts --format cjs,esm --dts",
-    "lint": "tsc",
+    "lint": "tsc --noEmit -p tsconfig.json && biome lint --diagnostic-level=error --no-errors-on-unmatched ./**/*.{js,ts}",
+    "lint:fix": "biome check --write --unsafe ./**/*.{js,ts}",
+    "lint:staged": "biome check --error-on-warnings --no-errors-on-unmatched --staged ./**/*.{js,ts}",
     "ci": "pnpm run test && pnpm run lint && pnpm run build",
     "release": "pnpm run ci && changeset publish"
   },
@@ -21,6 +23,7 @@
   "author": "",
   "license": "ISC",
   "devDependencies": {
+    "@biomejs/biome": "1.8.3",
     "@changesets/cli": "^2.27.7",
     "@types/node": "^22.1.0",
     "tsup": "^8.2.4",
