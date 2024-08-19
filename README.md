@@ -23,10 +23,10 @@ const sdkInstance = new uniFarcasterSdk({
 	activeService: 'airstack' //Optional. It's implied from the api key you provide
 })
 
-// Invalid active service
+// Invalid active service is ignored
 const sdkInstance = new uniFarcasterSdk({
 	airstackApiKey: 'your-airstack-api-key',
-	activeService: 'neynar' //It's ingnored and automatically set to airstack
+	activeService: 'neynar' //Automatically set to airstack since only airstack api key is provided
 })
 
   //Both
@@ -45,9 +45,6 @@ const sdkInstance = new uniFarcasterSdk({
   //Optional and only used when debug is true.
   // By default, all query is logged but setting the log level will only log queries with the specified level
 })
-
-
-
 
 //Get Active Service
 sdkInstance.getActiveService() //airstack
@@ -127,7 +124,4 @@ Check if error is not null to knowif there was an error and handle it accordingl
 ## TODO
 - Add an optional `retry` config to all queries and the option to switch service if there's an error
 i.e If the current active service is airstack and the query fails, it will try to use neynar`
-
-
-
 
