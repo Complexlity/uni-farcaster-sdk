@@ -13,9 +13,9 @@
     "dev": "vitest",
     "test": "vitest run",
     "build": "tsup src/index.ts --format cjs,esm --dts",
-    "lint": "tsc --noEmit -p tsconfig.json && biome lint --diagnostic-level=error --no-errors-on-unmatched ./**/*.{js,ts}",
-    "lint:fix": "biome check --write --unsafe ./**/*.{js,ts}",
-    "lint:staged": "biome check --error-on-warnings --no-errors-on-unmatched --staged ./**/*.{js,ts}",
+    "lint": "tsc --noEmit -p tsconfig.json && biome lint --diagnostic-level=error --no-errors-on-unmatched ./src",
+    "lint:fix": "biome check --write --unsafe ./src",
+    "lint:staged": "biome check --error-on-warnings --no-errors-on-unmatched --staged ./src",
     "ci": "pnpm run test && pnpm run lint && pnpm run build",
     "release": "pnpm run ci && changeset publish"
   },

@@ -7,5 +7,5 @@ const service = new neynarService("test-api-key");
 runBasicTests(service);
 
 test("it should error if api key is not provided", async () => {
-  expect(() => new neynarService("")).toThrowError();
+	expect(() => new neynarService("")).toThrowError();
 });

@@ -7,5 +7,5 @@ const service = new airstackService("test-api-key");
 runBasicTests(service);
 
 test("it should error if api key is not provided", async () => {
-  expect(() => new airstackService("")).toThrowError();
+	expect(() => new airstackService("")).toThrowError();
 });
