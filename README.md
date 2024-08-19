@@ -106,7 +106,7 @@ type Cast = {
     recasted: boolean;
   };
   text: string;
-  embeds: any[];
+  embeds: unknown[];
   channel: string | null;
 };
 ```
@@ -117,11 +117,16 @@ By default, invalid configurations will throw an error.
 All queries don't throw errors but return an object
 
 ```ts
-{data: PossibleReturnedValue | null, error: any | null}
+//Not Errors
+{data: PossibleReturnedValue , error: null}
+or
+//With Error
+{ data: null, error: {message: string}}
 ```
 Check if error is not null to knowif there was an error and handle it accordingly.
 
 ## TODO
 - Add an optional `retry` config to all queries and the option to switch service if there's an error
 i.e If the current active service is airstack and the query fails, it will try to use neynar`
-
+- Add airstack custom support. Where you can pass in custom airstack graphql queries if you need more than the sdk offers
+- Add neynar custom support where you can pass custom neynar rest endpoints if you need more than the sdk offers
