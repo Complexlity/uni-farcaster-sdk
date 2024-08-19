@@ -1,5 +1,11 @@
 # uni-farcaster-sdk
 
+## 0.0.13
+
+### Patch Changes
+
+- 45d5994: Add query caching
+
 ## 0.0.12
 
 ### Patch Changes
