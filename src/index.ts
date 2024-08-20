@@ -1,8 +1,7 @@
 import {
   Cache,
   type CacheKeys,
-  type CacheTypes,
-  type StringOrNumberArray,
+  type CacheTypes
 } from "@/lib/cache";
 import { DEFAULTS } from "@/lib/constants";
 import { LogLevel, Logger, Noop } from "@/lib/logger";
@@ -37,7 +36,7 @@ class uniFarcasterSdk implements Omit<Service, "name"> {
       return new Proxy(this, {
         get(target, prop) {
           const propKey = prop.toString();
-          const ignoreMethods = ["logger", "withCache", "createService"];
+          const ignoreMethods = ["logger", "withCache", "createService", "neynar", "airstack"];
 
           // Get the original method or property
           //@ts-expect-error
@@ -52,7 +51,9 @@ class uniFarcasterSdk implements Omit<Service, "name"> {
               target
                 .logger(target.activeService)
                 .info(
-                  `${propKey}${args.length > 0 ? ` Args: [${args}]` : ""} running...`,
+                  `${propKey}${
+                    args.length > 0 ? ` Args: [${args}]` : ""
+                  } running...`
                 );
 
               try {
@@ -61,13 +62,17 @@ class uniFarcasterSdk implements Omit<Service, "name"> {
                   target
                     .logger(target.activeService)
                     .error(
-                      `${propKey}${args.length > 0 ? `, Args: [${args}]` : ""} erorr ❌`,
+                      `${propKey}${
+                        args.length > 0 ? `, Args: [${args}]` : ""
+                      } erorr ❌`
                     );
                 } else {
                   target
                     .logger(target.activeService)
                     .success(
-                      `${propKey}${args.length > 0 ? `, Args: [${args}]` : ""} success ✅`,
+                      `${propKey}${
+                        args.length > 0 ? `, Args: [${args}]` : ""
+                      } success ✅`
                     );
                 }
                 return result;
@@ -75,7 +80,9 @@ class uniFarcasterSdk implements Omit<Service, "name"> {
                 target
                   .logger(target.activeService)
                   .error(
-                    `${propKey}${args.length > 0 ? `, Args: [${args}]` : ""} erorr ❌`,
+                    `${propKey}${
+                      args.length > 0 ? `, Args: [${args}]` : ""
+                    } erorr ❌`
                   );
                 throw error; // Re-throw the error after logging it
               }
@@ -94,9 +101,9 @@ class uniFarcasterSdk implements Omit<Service, "name"> {
 
   private async withCache<T extends CacheKeys>(
     type: T,
-
     fn: (...args: any[]) => Promise<DataOrError<CacheTypes[T]>>,
-    params: StringOrNumberArray,
+    params: unknown[],
+    thisArg?: any
   ) {
     const cachedData = this.cache.get(type, params);
     if (cachedData) {
@@ -107,11 +114,11 @@ class uniFarcasterSdk implements Omit<Service, "name"> {
       };
     }
     this.logger({ name: "cache miss" }).error(`Args: ${params.join(" ")}`);
-    const result = await fn.apply(this.activeService, params);
+    const result = await fn.apply(thisArg || this.activeService, params);
     const { data } = result;
     if (data) {
       //First params is the fid or username and we don't want to add that since we would get that from data
-      const setParams = params.slice(1);
+      const setParams = type === "custom" ? params: params.slice(1)
       this.cache.set(type, data, setParams);
     }
     return result;
@@ -140,54 +147,56 @@ class uniFarcasterSdk implements Omit<Service, "name"> {
   }
 
   public getActiveService() {
-    // if (this.debug) {
-    //   const logger = this.logger();
-    //   logger.info(`active service: ${this.activeService?.name}`);
-    // }
     return this.activeService?.name;
   }
 
   public setActiveService(service: TService) {
-    // this.logger().info(`setting active to: ${service}`);
     this.activeService = this.createService(service);
-    // this.logger().info(`active service: ${this.activeService?.name}`);
   }
 
   public async airstack<T = unknown>(
     query: string,
-    variables: Record<string, unknown> = {},
+    variables: Record<string, unknown> = {}
   ) {
     if (!this.airstackApiKey) throw new Error("No airstack api key provided");
     const airstackService = new services.airstack(this.airstackApiKey);
-    return await airstackService.customQuery<T>(query, variables);
+    const res = await this.withCache("custom", airstackService.customQuery<T>, [
+      query,
+      variables,
+    ], airstackService);
+    return res;
   }
 
   public async neynar<T = unknown>(
     endpoint: string,
-    params: Record<string, unknown> = {},
+    params: Record<string, unknown> = {}
   ) {
     if (!this.neynarApiKey) throw new Error("No neynar api key provided");
     const neynarService = new services.neynar(this.neynarApiKey);
-    return await neynarService.customQuery<T>(endpoint, params);
+    const res = await this.withCache("custom", neynarService.customQuery<T>, [
+      endpoint,
+      params,
+    ], neynarService);
+    return res;
   }
 
   public async getUserByFid(fid: number, viewerFid: number = DEFAULTS.fid) {
     const res = (await this.withCache(
       "user",
       this.activeService?.getUserByFid,
-      [fid, viewerFid],
+      [fid, viewerFid]
     )) as DataOrError<User>;
     return res;
   }
 
   public async getUserByUsername(
     username: string,
-    viewerFid: number = DEFAULTS.fid,
+    viewerFid: number = DEFAULTS.fid
   ) {
     const res = await this.withCache(
       "user",
       this.activeService?.getUserByUsername,
-      [username, viewerFid],
+      [username, viewerFid]
     );
     return res;
   }
@@ -234,7 +243,7 @@ function evaluateConfig(config: Config) {
       activeServiceName = config.activeService;
     } else {
       const randomIndex = Math.floor(
-        Math.random() * Object.keys(services).length,
+        Math.random() * Object.keys(services).length
       );
       const service = Object.keys(services)[randomIndex] as TService;
 

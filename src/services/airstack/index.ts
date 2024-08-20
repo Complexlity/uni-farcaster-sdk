@@ -153,7 +153,7 @@ export class airstackService implements Service {
     return { data: this.getCastFromAirstackResult(returnedData), error: null };
   }
 
-  async customQuery<T>(query: string, variables = {}) {
+  async customQuery<T>(query: string, variables: Record<string, unknown>) {
     return await fetchQuery<T>(this.apiKey, query, variables);
   }
 }
