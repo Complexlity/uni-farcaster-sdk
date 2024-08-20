@@ -7,5 +7,5 @@ const service = new hubService("https://testhub.com");
 runBasicTests(service);
 
 test("it should error if hub url is not provided", async () => {
-	expect(() => new hubService("")).toThrowError();
+  expect(() => new hubService("")).toThrowError();
 });

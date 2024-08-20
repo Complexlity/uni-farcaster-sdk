@@ -15,17 +15,29 @@
     "build": "tsup src/index.ts --format cjs,esm --dts",
     "lint": "tsc --noEmit -p tsconfig.json && biome lint --diagnostic-level=error --no-errors-on-unmatched ./src",
     "lint:fix": "biome check --write --unsafe ./src",
-    "lint:staged": "biome check --error-on-warnings --no-errors-on-unmatched --staged ./src",
+    "lint:staged": "biome check --no-errors-on-unmatched --staged ./src",
+    "format": "biome format --write --no-errors-on-unmatched --staged .",
     "ci": "pnpm run test && pnpm run lint && pnpm run build",
-    "release": "pnpm run ci && changeset publish"
+    "release": "pnpm run ci && changeset publish",
+    "prepare": "husky"
   },
-  "keywords": [],
-  "author": "",
-  "license": "ISC",
+  "keywords": [
+    "farcaster",
+    "sdk",
+    "uni-farcaster",
+    "airstack",
+    "neynar"
+  ],
+  "bugs": {
+    "url": "https://github.com/Complexlity/uni-farcaster-sdk/issues"
+  },
+  "author": "Complexlity (https://complexity.dev)",
+  "license": "MIT",
   "devDependencies": {
     "@biomejs/biome": "1.8.3",
     "@changesets/cli": "^2.27.7",
     "@types/node": "^22.1.0",
+    "husky": "^9.1.4",
     "tsup": "^8.2.4",
     "typescript": "^5.5.4",
     "vite-tsconfig-paths": "^5.0.1",

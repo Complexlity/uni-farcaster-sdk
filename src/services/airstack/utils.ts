@@ -57,7 +57,7 @@ export const userByFidQuery = (fid: number, viewerFid: number) => `query MyQuery
 }`;
 
 export const userByUsernameQuery = (username: string) =>
-	`query MyQuery {
+  `query MyQuery {
   Socials(
     input: {filter: {profileName: {_eq: "${username}"}}, blockchain: ethereum}
   ) {
@@ -68,7 +68,7 @@ export const userByUsernameQuery = (username: string) =>
 }`;
 
 export const castByHashQuery = (castHash: string, viewerFid: number) =>
-	`query FetchCastAuthorLikedByAndReactedBy {
+  `query FetchCastAuthorLikedByAndReactedBy {
   FarcasterCasts(
     input: {filter: {hash: {_eq: "${castHash}"}}, blockchain: ALL}
   ) {
@@ -97,7 +97,7 @@ export const castByHashQuery = (castHash: string, viewerFid: number) =>
 }
 `;
 export const castByUrlQuery = (castUrl: string, viewerFid: number) =>
-	`query FetchCastAuthorLikedByAndReactedBy {
+  `query FetchCastAuthorLikedByAndReactedBy {
   FarcasterCasts(
     input: {filter: {url: {_eq: "${castUrl}"}}, blockchain: ALL}
   )  {
@@ -127,56 +127,53 @@ export const castByUrlQuery = (castUrl: string, viewerFid: number) =>
 `;
 
 export async function _fetch<ResponseType>(
-	query: string,
-	authKey: string,
+  query: string,
+  authKey: string,
 ): Promise<DataOrError<ResponseType>> {
-	try {
-		const response = await axios({
-			url: AIRSTACK_ENDPOINT,
-			method: "POST",
-			headers: {
-				"Content-Type": "application/json",
-				Authorization: authKey,
-			},
-			data: {
-				query,
-				variables: {},
-			},
-		});
+  try {
+    const response = await axios({
+      url: AIRSTACK_ENDPOINT,
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json",
+        Authorization: authKey,
+      },
+      data: {
+        query,
+        variables: {},
+      },
+    });
 
-		const data = response.data?.data;
-		let error = null;
+    const data = response.data?.data;
+    let error = null;
 
-		if (response.data.errors || response.data.error) {
-			error = response.data.errors || response.data.error;
-		}
-		return { data, error };
-	} catch (error) {
-		if (axios.isAxiosError(error)) {
-			return {
-				data: null,
-				error: { message: error.message || "Unable to fetch data" },
-			};
-		}
-		return { data: null, error: { message: "An unexpected error occurred" } };
-	}
+    if (response.data.errors || response.data.error) {
+      error = response.data.errors || response.data.error;
+    }
+    return { data, error };
+  } catch (error) {
+    if (axios.isAxiosError(error)) {
+      return {
+        data: null,
+        error: { message: error.message || "Unable to fetch data" },
+      };
+    }
+    return { data: null, error: { message: "An unexpected error occurred" } };
+  }
 }
 
-export async function fetchGql<ResponseType>(
-	query: string,
-	authKey: string,
-) {
-	return _fetch<ResponseType>(query, authKey);
+export async function fetchGql<ResponseType>(query: string, authKey: string) {
+  return _fetch<ResponseType>(query, authKey);
 }
 
 export async function fetchQuery<T>(
-	query: string,
-	authKey: string,
+  query: string,
+  authKey: string,
 ): Promise<DataOrError<T>> {
-	const { data, error } = await fetchGql<T>(query, authKey);
+  const { data, error } = await fetchGql<T>(query, authKey);
 
-	if (error) {
-		return { data: null, error };
-	}
-	return { data, error: null };
+  if (error) {
+    return { data: null, error };
+  }
+  return { data, error: null };
 }
