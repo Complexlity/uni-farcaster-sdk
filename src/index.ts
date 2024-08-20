@@ -38,7 +38,6 @@ class uniFarcasterSdk implements Omit<Service, "name"> {
   private async withCache<T extends CacheKeys>(
     type: T,
 
-    // biome-ignore lint/suspicious/noExplicitAny: <explanation>
     fn: (...args: any[]) => Promise<DataOrError<CacheTypes[T]>>,
     params: StringOrNumberArray,
   ) {
@@ -95,6 +94,18 @@ class uniFarcasterSdk implements Omit<Service, "name"> {
     this.logger().info(`setting active to: ${service}`);
     this.activeService = this.createService(service);
     this.logger().info(`active service: ${this.activeService?.name}`);
+  }
+
+  public async airstack(query: string, variables: Record<string, unknown> = {}) {
+    if(!this.airstackApiKey) throw new Error("No airstack api key provided");
+    const airstackService = new services.airstack(this.airstackApiKey);
+    return await airstackService.customQuery(query, variables);
+  }
+
+  public async neynar(endpoint: string, params: Record<string, unknown> = {}) {
+    if(!this.neynarApiKey) throw new Error("No neynar api key provided");
+    const neynarService = new services.neynar(this.neynarApiKey);
+    return await neynarService.customQuery(endpoint, params);
   }
 
   public async getUserByFid(fid: number, viewerFid: number = DEFAULTS.fid) {

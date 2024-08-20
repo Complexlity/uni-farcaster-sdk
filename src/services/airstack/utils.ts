@@ -34,7 +34,10 @@ const castReturnedQuery = `
       }
 	`;
 
-export const userByFidQuery = (fid: number, viewerFid: number) => `query MyQuery {
+export const userByFidQuery = (
+  fid: number,
+  viewerFid: number
+) => `query MyQuery {
   Socials(input: {filter: {userId: {_eq: "${fid}"}}, blockchain: ethereum}) {
     Social {
       ${socialReturnedQuery}
@@ -127,8 +130,9 @@ export const castByUrlQuery = (castUrl: string, viewerFid: number) =>
 `;
 
 export async function _fetch<ResponseType>(
-  query: string,
   authKey: string,
+  query: string,
+  variables: Record<string, unknown>
 ): Promise<DataOrError<ResponseType>> {
   try {
     const response = await axios({
@@ -140,7 +144,7 @@ export async function _fetch<ResponseType>(
       },
       data: {
         query,
-        variables: {},
+        variables,
       },
     });
 
@@ -162,15 +166,20 @@ export async function _fetch<ResponseType>(
   }
 }
 
-export async function fetchGql<ResponseType>(query: string, authKey: string) {
-  return _fetch<ResponseType>(query, authKey);
+export async function fetchGql<ResponseType>(
+  authKey: string,
+  query: string,
+  variables: Record<string, unknown>
+) {
+  return _fetch<ResponseType>(authKey, query, variables);
 }
 
 export async function fetchQuery<T>(
-  query: string,
   authKey: string,
+  query: string,
+  variables = {}
 ): Promise<DataOrError<T>> {
-  const { data, error } = await fetchGql<T>(query, authKey);
+  const { data, error } = await fetchGql<T>(authKey, query, variables);
 
   if (error) {
     return { data: null, error };

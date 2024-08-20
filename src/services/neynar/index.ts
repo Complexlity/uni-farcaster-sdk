@@ -185,4 +185,18 @@ export class neynarService implements Service {
       return this.handleError(e);
     }
   }
+
+  async customQuery(query: string, params = {}) {
+    try {
+      const result = await api.get(query, {
+        params,
+        headers: this.getHeaders(),
+      });
+      return {data: result.data, error: null};
+    } catch (error) {
+      this.handleError(error);
+    }
+
+  }
+
 }
