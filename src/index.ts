@@ -33,6 +33,63 @@ class uniFarcasterSdk implements Omit<Service, "name"> {
     this.logLevel = logLevel;
     this.debug = debug;
     this.cache = new Cache({ ttl: cacheTtl });
+    if (this.debug) {
+      return new Proxy(this, {
+        get(target, prop) {
+          const propKey = prop.toString();
+          const ignoreMethods = ["logger", "withCache", "createService"];
+
+          // Get the original method or property
+          //@ts-expect-error
+          const originalMethod = target[propKey];
+
+          // Check if the property is a function and should not be ignored
+          if (
+            typeof originalMethod === "function" &&
+            !ignoreMethods.includes(propKey)
+          ) {
+            return (...args: any[]) => {
+              target
+                .logger(target.activeService)
+                .info(
+                  `${propKey}${args.length > 0 ? ` Args: [${args}]` : ""} running...`,
+                );
+
+              try {
+                const result = originalMethod.apply(target, args);
+                if (result.error) {
+                  target
+                    .logger(target.activeService)
+                    .error(
+                      `${propKey}${args.length > 0 ? `, Args: [${args}]` : ""} erorr ❌`,
+                    );
+                } else {
+                  target
+                    .logger(target.activeService)
+                    .success(
+                      `${propKey}${args.length > 0 ? `, Args: [${args}]` : ""} success ✅`,
+                    );
+                }
+                return result;
+              } catch (error) {
+                target
+                  .logger(target.activeService)
+                  .error(
+                    `${propKey}${args.length > 0 ? `, Args: [${args}]` : ""} erorr ❌`,
+                  );
+                throw error; // Re-throw the error after logging it
+              }
+            };
+          } else if (typeof originalMethod === "function") {
+            return (...args: any[]) => {
+              return originalMethod.apply(target, args);
+            };
+          }
+          // If it's not a function or is in the ignore list, return the property value directly
+          return originalMethod;
+        },
+      });
+    }
   }
 
   private async withCache<T extends CacheKeys>(
@@ -43,13 +100,13 @@ class uniFarcasterSdk implements Omit<Service, "name"> {
   ) {
     const cachedData = this.cache.get(type, params);
     if (cachedData) {
-      this.logger({ name: "cache hit" }).success(`${params.join(" ")}`);
+      this.logger({ name: "cache hit" }).success(`Args: ${params.join(" ")}`);
       return {
         data: cachedData,
         error: null,
       };
     }
-    this.logger({ name: "cache miss" }).error(`${params.join(" ")}`);
+    this.logger({ name: "cache miss" }).error(`Args: ${params.join(" ")}`);
     const result = await fn.apply(this.activeService, params);
     const { data } = result;
     if (data) {
@@ -83,55 +140,43 @@ class uniFarcasterSdk implements Omit<Service, "name"> {
   }
 
   public getActiveService() {
-    if (this.debug) {
-      const logger = this.logger();
-      logger.info(`active service: ${this.activeService?.name}`);
-    }
+    // if (this.debug) {
+    //   const logger = this.logger();
+    //   logger.info(`active service: ${this.activeService?.name}`);
+    // }
     return this.activeService?.name;
   }
 
   public setActiveService(service: TService) {
-    this.logger().info(`setting active to: ${service}`);
+    // this.logger().info(`setting active to: ${service}`);
     this.activeService = this.createService(service);
-    this.logger().info(`active service: ${this.activeService?.name}`);
+    // this.logger().info(`active service: ${this.activeService?.name}`);
   }
 
-  public async airstack(query: string, variables: Record<string, unknown> = {}) {
-    if(!this.airstackApiKey) throw new Error("No airstack api key provided");
+  public async airstack<T = unknown>(
+    query: string,
+    variables: Record<string, unknown> = {},
+  ) {
+    if (!this.airstackApiKey) throw new Error("No airstack api key provided");
     const airstackService = new services.airstack(this.airstackApiKey);
-    return await airstackService.customQuery(query, variables);
+    return await airstackService.customQuery<T>(query, variables);
   }
 
-  public async neynar(endpoint: string, params: Record<string, unknown> = {}) {
-    if(!this.neynarApiKey) throw new Error("No neynar api key provided");
+  public async neynar<T = unknown>(
+    endpoint: string,
+    params: Record<string, unknown> = {},
+  ) {
+    if (!this.neynarApiKey) throw new Error("No neynar api key provided");
     const neynarService = new services.neynar(this.neynarApiKey);
-    return await neynarService.customQuery(endpoint, params);
+    return await neynarService.customQuery<T>(endpoint, params);
   }
 
   public async getUserByFid(fid: number, viewerFid: number = DEFAULTS.fid) {
-    this.logger(this.activeService).info(
-      `fetching user by fid: ${fid} ${
-        viewerFid ? `and viewerFid: ${viewerFid}` : ""
-      }`,
-    );
     const res = (await this.withCache(
       "user",
       this.activeService?.getUserByFid,
       [fid, viewerFid],
     )) as DataOrError<User>;
-    if (this.debug && res.error) {
-      this.logger(this.activeService).error(
-        `failed to fetch user by fid: ${fid} ${
-          viewerFid ? `and viewerFid: ${viewerFid}` : ""
-        }`,
-      );
-    } else {
-      this.logger(this.activeService).success(
-        `fetched user by fid: ${fid} ${
-          viewerFid ? `and viewerFid: ${viewerFid}` : ""
-        }`,
-      );
-    }
     return res;
   }
 
@@ -139,34 +184,11 @@ class uniFarcasterSdk implements Omit<Service, "name"> {
     username: string,
     viewerFid: number = DEFAULTS.fid,
   ) {
-    this.logger(this.activeService).info(
-      `fetching user by username: ${username} ${
-        viewerFid ? `and viewerFid: ${viewerFid}` : ""
-      }`,
-    );
-    if (this.activeService?.name === "airstack") {
-      this.logger(this.activeService).warning(
-        "viewer context is not returned when fetching by username with airstack. Fetch by fid instead or use neynar service",
-      );
-    }
     const res = await this.withCache(
       "user",
       this.activeService?.getUserByUsername,
       [username, viewerFid],
     );
-    if (res.error) {
-      this.logger(this.activeService).error(
-        `failed to fetch user by username: ${username} ${
-          viewerFid ? `and viewerFid: ${viewerFid}` : ""
-        }`,
-      );
-    } else {
-      this.logger(this.activeService).success(
-        `fetched user by username: ${username} ${
-          viewerFid ? `and viewerFid: ${viewerFid}` : ""
-        }`,
-      );
-    }
     return res;
   }
 
@@ -181,45 +203,14 @@ class uniFarcasterSdk implements Omit<Service, "name"> {
         viewerFid,
       ]);
     }
-    if (res.error) {
-      this.logger(this.activeService).error(
-        `failed to fetch cast by hash: ${hash} ${
-          viewerFid ? `and viewerFid: ${viewerFid}` : ""
-        }`,
-      );
-    } else {
-      this.logger(this.activeService).success(
-        `fetched cast by hash: ${hash} ${
-          viewerFid ? `and viewerFid: ${viewerFid}` : ""
-        }`,
-      );
-    }
     return res;
   }
 
   public async getCastByUrl(url: string, viewerFid: number = DEFAULTS.fid) {
-    this.logger(this.activeService).info(
-      `fetching cast by url: ${url} ${
-        viewerFid ? `and viewerFid: ${viewerFid}` : ""
-      }`,
-    );
     const res = await this.withCache("cast", this.activeService?.getCastByUrl, [
       url,
       viewerFid,
     ]);
-    if (res.error) {
-      this.logger(this.activeService).error(
-        `failed to fetch cast by url: ${url} ${
-          viewerFid ? `and viewerFid: ${viewerFid}` : ""
-        }`,
-      );
-    } else {
-      this.logger(this.activeService).success(
-        `fetched cast by url: ${url} ${
-          viewerFid ? `and viewerFid: ${viewerFid}` : ""
-        }`,
-      );
-    }
     return res;
   }
 }
