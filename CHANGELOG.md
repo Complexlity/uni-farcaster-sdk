@@ -1,5 +1,11 @@
 # uni-farcaster-sdk
 
+## 0.0.14
+
+### Patch Changes
+
+- aee39ed: feat: add custom queries
+
 ## 0.0.13
 
 ### Patch Changes
