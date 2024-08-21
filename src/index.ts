@@ -33,22 +33,20 @@ class uniFarcasterSdk implements Omit<Service, "name"> {
         get(target, prop) {
           const propKey = prop.toString();
           const customMethods = ["neynar", "airstack"];
-          const ignoredMethods = [
-            "logger",
-            "withCache",
-            "createService",
-          ];
+          const ignoredMethods = ["logger", "withCache", "createService"];
 
           // Get the original method or property
           //@ts-expect-error
           const originalMethod = target[propKey];
 
           // Check if the property is a function and should not be ignored
-          if(typeof originalMethod === "function" ) {
+          if (typeof originalMethod === "function") {
             if (!ignoredMethods.includes(propKey)) {
               return async (...args: any[]) => {
-                const loggedService = customMethods.includes(propKey) ? {name: `custom`} : target.activeService;
-                const loggedArgs = customMethods.includes(propKey) ? "" : args
+                const loggedService = customMethods.includes(propKey)
+                  ? { name: `custom` }
+                  : target.activeService;
+                const loggedArgs = customMethods.includes(propKey) ? "" : args;
                 target
                   .logger(loggedService)
                   .info(
@@ -59,7 +57,10 @@ class uniFarcasterSdk implements Omit<Service, "name"> {
 
                 try {
                   let result;
-                  if(typeof originalMethod.apply === "function" && originalMethod.constructor.name === "AsyncFunction") {
+                  if (
+                    typeof originalMethod.apply === "function" &&
+                    originalMethod.constructor.name === "AsyncFunction"
+                  ) {
                     result = await originalMethod.apply(target, args);
                   } else {
                     result = originalMethod.apply(target, args);
@@ -84,7 +85,10 @@ class uniFarcasterSdk implements Omit<Service, "name"> {
                   }
                   return result;
                 } catch (error) {
-                  const loggedError = error && typeof error === "object" && "message" in error ? error.message : JSON.stringify(error);
+                  const loggedError =
+                    error && typeof error === "object" && "message" in error
+                      ? error.message
+                      : JSON.stringify(error);
                   target
                     .logger(loggedService)
                     .error(
@@ -95,9 +99,7 @@ class uniFarcasterSdk implements Omit<Service, "name"> {
                   throw error; // Re-throw the error after logging it
                 }
               };
-            }
-
-            else {
+            } else {
               return (...args: any[]) => {
                 return originalMethod.apply(target, args);
               };
@@ -117,8 +119,11 @@ class uniFarcasterSdk implements Omit<Service, "name"> {
     thisArg?: Service,
   ) {
     //Don't log params of custom functions as they can be too large
-    const description = type === "custom" ? `custom ${thisArg?.name || ""}` : `${fn.name} args: ${params.join(" ")}`;
-    console.log({description})
+    const description =
+      type === "custom"
+        ? `custom ${thisArg?.name || ""}`
+        : `${fn.name} args: ${params.join(" ")}`;
+    console.log({ description });
     const cachedData = this.cache.get(type, params);
     if (cachedData) {
       this.logger({ name: "cache hit" }).success(`${description}`);
@@ -187,6 +192,7 @@ class uniFarcasterSdk implements Omit<Service, "name"> {
     endpoint: string,
     params: Record<string, unknown> = {},
   ) {
+    console.log("I was called")
     if (!this.neynarApiKey) throw new Error("No neynar api key provided");
     const neynarService = new services.neynar(this.neynarApiKey);
     const res = await this.withCache(

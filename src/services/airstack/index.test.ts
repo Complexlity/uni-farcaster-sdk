@@ -1,11 +1,18 @@
 import { expect, test } from "vitest";
 import { airstackService } from ".";
 import { runBasicTests } from "../../lib/utils";
+import { describe } from "node:test";
 
 const service = new airstackService("test-api-key");
 
 runBasicTests(service);
 
-test("it should error if api key is not provided", async () => {
-  expect(() => new airstackService("")).toThrowError();
+describe("main", () => {
+  test("it should error if api key is not provided", async () => {
+    expect(() => new airstackService("")).toThrowError();
+  });
+  
+  test("it should error if customQuery function is missing", async () => {
+    expect(service.customQuery).not.toBeUndefined();
+  });
 });
