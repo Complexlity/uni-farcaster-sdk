@@ -22,48 +22,50 @@ const mockUser = { fid: 123, username: "testuser" };
 
 runBasicTests(service);
 
-test("it should take config active service", async () => {
-  expect(service.getActiveService()).toBe("neynar");
-});
-
-test("it should ignore the config active service if it is not valid", async () => {
-  const service = new uniFarcasterSdk({
-    airstackApiKey: "test-airstack-api-key",
-    activeService: "neynar",
+describe("main", () => {
+  test("it should take config active service", async () => {
+    expect(service.getActiveService()).toBe("neynar");
   });
-  expect(service.getActiveService()).toBe("airstack");
-});
-test("it should pick a default service randomly if no active service is provided", async () => {
-  const service = new uniFarcasterSdk({
-    neynarApiKey: "test-neynar-api-key",
-    airstackApiKey: "test-airstack-api-key",
+
+  test("it should ignore the config active service if it is not valid", async () => {
+    const service = new uniFarcasterSdk({
+      airstackApiKey: "test-airstack-api-key",
+      activeService: "neynar",
+    });
+
+    expect(service.getActiveService()).toBe("airstack");
   });
-  const expectArray = Object.keys(services);
-  const activeService = service.getActiveService();
-  expect(expectArray).toContain(activeService);
-});
-
-test("it should default active service depending on the api key provided", async () => {
-  const defaultService = new uniFarcasterSdk({
-    neynarApiKey: "test-neynar-api-key",
-    activeService: "airstack",
+  test("it should pick a default service randomly if no active service is provided", async () => {
+    const service = new uniFarcasterSdk({
+      neynarApiKey: "test-neynar-api-key",
+      airstackApiKey: "test-airstack-api-key",
+    });
+    const expectArray = Object.keys(services);
+    const activeService = service.getActiveService();
+    expect(expectArray).toContain(activeService);
   });
-  expect(defaultService.getActiveService()).toBe("neynar");
-});
 
-test("it should error if api key is not provided", async () => {
-  expect(
-    () =>
-      new uniFarcasterSdk({
-        activeService: "neynar",
-      }),
-  ).toThrowError();
-});
+  test("it should default active service depending on the api key provided", async () => {
+    const defaultService = new uniFarcasterSdk({
+      neynarApiKey: "test-neynar-api-key",
+      activeService: "airstack",
+    });
+    expect(defaultService.getActiveService()).toBe("neynar");
+  });
 
-test("it should not error if not config is not provided", async () => {
-  expect(() => new uniFarcasterSdk({})).toThrowError();
-});
+  test("it should error if api key is not provided", async () => {
+    expect(
+      () =>
+        new uniFarcasterSdk({
+          activeService: "neynar",
+        })
+    ).toThrowError();
+  });
 
+  test("it should not error if not config is not provided", async () => {
+    expect(() => new uniFarcasterSdk({})).toThrowError();
+  });
+});
 describe("debug mode", () => {
   let consoleSpy: ReturnType<typeof vi.spyOn>;
 
@@ -303,5 +305,61 @@ describe("uniFarcasterSdk Cache with cacheTtl", () => {
     // Third call should hit the service again
     await sdk.getUserByFid(mockUser.fid);
     expect(mockService.getUserByFid).toHaveBeenCalledTimes(2);
+  });
+});
+
+describe("custom queries", () => {
+  describe("neynar", () => {
+    test("should call the neynar service with the provided endpoint and params", async () => {
+      const sdk = new uniFarcasterSdk({
+        neynarApiKey: "neynar-api-key",
+        airstackApiKey: "airstack-api-key",
+      });
+      const mockResponse = { data: { message: "success" }, error: null };
+      vi.spyOn(sdk, "neynar").mockResolvedValue(mockResponse);
+
+      const result = await sdk.neynar("/test-endpoint", { param1: "value" });
+
+      expect(result).toEqual(mockResponse);
+      expect(sdk.neynar).toHaveBeenCalledWith("/test-endpoint", {
+        param1: "value",
+      });
+    });
+
+    test("should throw an error if no neynar api key is provided", async () => {
+      const sdk = new uniFarcasterSdk({
+        airstackApiKey: "airstack-api-key",
+      });
+      await expect(sdk.neynar("/test-endpoint")).rejects.toThrowError(
+        "No neynar api key provided"
+      );
+    });
+  });
+
+  describe("airstack", () => {
+    test("should call the airstack service with the provided query and variables", async () => {
+      const sdk = new uniFarcasterSdk({
+        airstackApiKey: "airstack-api-key",
+      });
+      const mockResponse = { data: { message: "success" }, error: null };
+      vi.spyOn(sdk, "airstack").mockResolvedValue(mockResponse);
+      const result = await sdk.airstack("query { example }", {
+        param1: "value",
+      });
+
+      expect(result).toEqual(mockResponse);
+      expect(sdk.airstack).toHaveBeenCalledWith("query { example }", {
+        param1: "value",
+      });
+    });
+
+    test("should throw an error if no airstack api key is provided", async () => {
+      const sdk = new uniFarcasterSdk({
+        neynarApiKey: "neynar-api-key",
+      });
+      await expect(sdk.airstack("query { example }")).rejects.toThrowError(
+        "No airstack api key provided"
+      );
+    });
   });
 });

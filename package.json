@@ -15,7 +15,7 @@
     "build": "tsup src/index.ts --format cjs,esm --dts",
     "lint": "tsc --noEmit -p tsconfig.json && biome lint --diagnostic-level=error --no-errors-on-unmatched ./src",
     "lint:fix": "biome check --write --unsafe ./src",
-    "lint:staged": "biome check --no-errors-on-unmatched --staged ./src",
+    "lint:staged": "biome check --no-errors-on-unmatched --error-on-warnings --staged ./src",
     "format": "biome format --write --no-errors-on-unmatched --staged .",
     "ci": "pnpm run test && pnpm run lint && pnpm run build",
     "release": "pnpm run ci && changeset publish",

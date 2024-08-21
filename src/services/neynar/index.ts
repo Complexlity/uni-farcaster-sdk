@@ -33,7 +33,17 @@ export class neynarService implements Service {
     if (e instanceof AxiosError) {
       return {
         data: null,
-        error: { message: e.response?.data?.error.message },
+        error: { message: e.message },
+      };
+    } else if (
+      e &&
+      typeof e === "object" &&
+      "message" in e &&
+      typeof e.message == "string"
+    ) {
+      return {
+        data: null,
+        error: { message: e.message },
       };
     }
     return {
@@ -183,6 +193,18 @@ export class neynarService implements Service {
       return { data: returnedCast, error: null };
     } catch (e) {
       return this.handleError(e);
+    }
+  }
+
+  async customQuery<T>(query: string, params: Record<string, unknown>) {
+    try {
+      const result = await api.get(query, {
+        params,
+        headers: this.getHeaders(),
+      });
+      return { data: result.data as T, error: null };
+    } catch (error) {
+      return this.handleError(error);
     }
   }
 }

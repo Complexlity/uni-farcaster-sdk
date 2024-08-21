@@ -12,7 +12,8 @@
     "noEmit": true,
     "paths": {
       "@/*": ["./src/*"]
-    }
+    },
+    "experimentalDecorators": true
   },
   "exclude": ["**/*.test.*"]
 }

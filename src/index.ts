@@ -1,9 +1,4 @@
-import {
-  Cache,
-  type CacheKeys,
-  type CacheTypes,
-  type StringOrNumberArray,
-} from "@/lib/cache";
+import { Cache, type CacheKeys, type CacheTypes } from "@/lib/cache";
 import { DEFAULTS } from "@/lib/constants";
 import { LogLevel, Logger, Noop } from "@/lib/logger";
 import type { Cast, Config, DataOrError, Service, User } from "@/lib/types";
@@ -33,29 +28,115 @@ class uniFarcasterSdk implements Omit<Service, "name"> {
     this.logLevel = logLevel;
     this.debug = debug;
     this.cache = new Cache({ ttl: cacheTtl });
+    if (this.debug) {
+      return new Proxy(this, {
+        get(target, prop) {
+          const propKey = prop.toString();
+          const customMethods = ["neynar", "airstack"];
+          const ignoredMethods = ["logger", "withCache", "createService"];
+
+          // Get the original method or property
+          //@ts-expect-error
+          const originalMethod = target[propKey];
+
+          // Check if the property is a function and should not be ignored
+          if (typeof originalMethod === "function") {
+            if (!ignoredMethods.includes(propKey)) {
+              return async (...args: any[]) => {
+                const loggedService = customMethods.includes(propKey)
+                  ? { name: `custom` }
+                  : target.activeService;
+                const loggedArgs = customMethods.includes(propKey) ? "" : args;
+                target
+                  .logger(loggedService)
+                  .info(
+                    `${propKey}${
+                      loggedArgs.length > 0 ? ` args: [${loggedArgs}]` : ""
+                    } running...`,
+                  );
+
+                try {
+                  let result;
+                  if (
+                    typeof originalMethod.apply === "function" &&
+                    originalMethod.constructor.name === "AsyncFunction"
+                  ) {
+                    result = await originalMethod.apply(target, args);
+                  } else {
+                    result = originalMethod.apply(target, args);
+                  }
+
+                  if (result.error) {
+                    target
+                      .logger(loggedService)
+                      .error(
+                        `${propKey}:${
+                          loggedArgs.length > 0 ? `, args: [${loggedArgs}]` : ""
+                        } ${result.error.message} ❌`,
+                      );
+                  } else {
+                    target
+                      .logger(loggedService)
+                      .success(
+                        `${propKey}: ${
+                          loggedArgs.length > 0 ? `, args: [${loggedArgs}]` : ""
+                        } success ✅`,
+                      );
+                  }
+                  return result;
+                } catch (error) {
+                  const loggedError =
+                    error && typeof error === "object" && "message" in error
+                      ? error.message
+                      : JSON.stringify(error);
+                  target
+                    .logger(loggedService)
+                    .error(
+                      `${propKey}${
+                        loggedArgs.length > 0 ? `, args: [${loggedArgs}]` : ""
+                      } ${loggedError} ❌`,
+                    );
+                  throw error; // Re-throw the error after logging it
+                }
+              };
+            } else {
+              return (...args: any[]) => {
+                return originalMethod.apply(target, args);
+              };
+            }
+          }
+          // If it's not a function or is in the ignore list, return the property value directly
+          return originalMethod;
+        },
+      });
+    }
   }
 
   private async withCache<T extends CacheKeys>(
     type: T,
-
-    // biome-ignore lint/suspicious/noExplicitAny: <explanation>
     fn: (...args: any[]) => Promise<DataOrError<CacheTypes[T]>>,
-    params: StringOrNumberArray,
+    params: unknown[],
+    thisArg?: Service,
   ) {
+    //Don't log params of custom functions as they can be too large
+    const description =
+      type === "custom"
+        ? `custom ${thisArg?.name || ""}`
+        : `${fn.name} args: ${params.join(" ")}`;
     const cachedData = this.cache.get(type, params);
     if (cachedData) {
-      this.logger({ name: "cache hit" }).success(`${params.join(" ")}`);
+      this.logger({ name: "cache hit" }).success(`${description}`);
       return {
         data: cachedData,
         error: null,
       };
     }
-    this.logger({ name: "cache miss" }).error(`${params.join(" ")}`);
-    const result = await fn.apply(this.activeService, params);
+    this.logger({ name: "cache miss" }).warning(`${description}`);
+    const result = await fn.apply(thisArg || this.activeService, params);
     const { data } = result;
     if (data) {
       //First params is the fid or username and we don't want to add that since we would get that from data
-      const setParams = params.slice(1);
+      const setParams = type === "custom" ? params : params.slice(1);
       this.cache.set(type, data, setParams);
     }
     return result;
@@ -84,43 +165,49 @@ class uniFarcasterSdk implements Omit<Service, "name"> {
   }
 
   public getActiveService() {
-    if (this.debug) {
-      const logger = this.logger();
-      logger.info(`active service: ${this.activeService?.name}`);
-    }
     return this.activeService?.name;
   }
 
   public setActiveService(service: TService) {
-    this.logger().info(`setting active to: ${service}`);
     this.activeService = this.createService(service);
-    this.logger().info(`active service: ${this.activeService?.name}`);
+  }
+
+  public async airstack<T = unknown>(
+    query: string,
+    variables: Record<string, unknown> = {},
+  ) {
+    if (!this.airstackApiKey) throw new Error("No airstack api key provided");
+    const airstackService = new services.airstack(this.airstackApiKey);
+    const res = await this.withCache(
+      "custom",
+      airstackService.customQuery<T>,
+      [query, variables],
+      airstackService,
+    );
+    return res;
+  }
+
+  public async neynar<T = unknown>(
+    endpoint: string,
+    params: Record<string, unknown> = {},
+  ) {
+    if (!this.neynarApiKey) throw new Error("No neynar api key provided");
+    const neynarService = new services.neynar(this.neynarApiKey);
+    const res = await this.withCache(
+      "custom",
+      neynarService.customQuery<T>,
+      [endpoint, params],
+      neynarService,
+    );
+    return res;
   }
 
   public async getUserByFid(fid: number, viewerFid: number = DEFAULTS.fid) {
-    this.logger(this.activeService).info(
-      `fetching user by fid: ${fid} ${
-        viewerFid ? `and viewerFid: ${viewerFid}` : ""
-      }`,
-    );
     const res = (await this.withCache(
       "user",
       this.activeService?.getUserByFid,
       [fid, viewerFid],
     )) as DataOrError<User>;
-    if (this.debug && res.error) {
-      this.logger(this.activeService).error(
-        `failed to fetch user by fid: ${fid} ${
-          viewerFid ? `and viewerFid: ${viewerFid}` : ""
-        }`,
-      );
-    } else {
-      this.logger(this.activeService).success(
-        `fetched user by fid: ${fid} ${
-          viewerFid ? `and viewerFid: ${viewerFid}` : ""
-        }`,
-      );
-    }
     return res;
   }
 
@@ -128,34 +215,11 @@ class uniFarcasterSdk implements Omit<Service, "name"> {
     username: string,
     viewerFid: number = DEFAULTS.fid,
   ) {
-    this.logger(this.activeService).info(
-      `fetching user by username: ${username} ${
-        viewerFid ? `and viewerFid: ${viewerFid}` : ""
-      }`,
-    );
-    if (this.activeService?.name === "airstack") {
-      this.logger(this.activeService).warning(
-        "viewer context is not returned when fetching by username with airstack. Fetch by fid instead or use neynar service",
-      );
-    }
     const res = await this.withCache(
       "user",
       this.activeService?.getUserByUsername,
       [username, viewerFid],
     );
-    if (res.error) {
-      this.logger(this.activeService).error(
-        `failed to fetch user by username: ${username} ${
-          viewerFid ? `and viewerFid: ${viewerFid}` : ""
-        }`,
-      );
-    } else {
-      this.logger(this.activeService).success(
-        `fetched user by username: ${username} ${
-          viewerFid ? `and viewerFid: ${viewerFid}` : ""
-        }`,
-      );
-    }
     return res;
   }
 
@@ -170,45 +234,14 @@ class uniFarcasterSdk implements Omit<Service, "name"> {
         viewerFid,
       ]);
     }
-    if (res.error) {
-      this.logger(this.activeService).error(
-        `failed to fetch cast by hash: ${hash} ${
-          viewerFid ? `and viewerFid: ${viewerFid}` : ""
-        }`,
-      );
-    } else {
-      this.logger(this.activeService).success(
-        `fetched cast by hash: ${hash} ${
-          viewerFid ? `and viewerFid: ${viewerFid}` : ""
-        }`,
-      );
-    }
     return res;
   }
 
   public async getCastByUrl(url: string, viewerFid: number = DEFAULTS.fid) {
-    this.logger(this.activeService).info(
-      `fetching cast by url: ${url} ${
-        viewerFid ? `and viewerFid: ${viewerFid}` : ""
-      }`,
-    );
     const res = await this.withCache("cast", this.activeService?.getCastByUrl, [
       url,
       viewerFid,
     ]);
-    if (res.error) {
-      this.logger(this.activeService).error(
-        `failed to fetch cast by url: ${url} ${
-          viewerFid ? `and viewerFid: ${viewerFid}` : ""
-        }`,
-      );
-    } else {
-      this.logger(this.activeService).success(
-        `fetched cast by url: ${url} ${
-          viewerFid ? `and viewerFid: ${viewerFid}` : ""
-        }`,
-      );
-    }
     return res;
   }
 }

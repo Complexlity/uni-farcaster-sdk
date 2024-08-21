@@ -58,35 +58,35 @@ type AirstackInstance = {
   airstack: (query: string) => void;
 };
 
-class MyClass {
-  private name: "neynar" | "airstack";
+// class MyClass {
+//   private name: "neynar" | "airstack";
 
-  constructor(name: "neynar" | "airstack") {
-    this.name = name;
-  }
+//   constructor(name: "neynar" | "airstack") {
+//     this.name = name;
+//   }
 
-  private neynarMethod(endpoint: string): void {
-    console.log(`Neynar endpoint: ${endpoint}`);
-  }
+//   private neynarMethod(endpoint: string): void {
+//     console.log(`Neynar endpoint: ${endpoint}`);
+//   }
 
-  private airstackMethod(query: string): void {
-    console.log(`Airstack query: ${query}`);
-  }
+//   private airstackMethod(query: string): void {
+//     console.log(`Airstack query: ${query}`);
+//   }
 
-  public getInstance<T = typeof this.name>() {
-    if (this.name === "neynar") {
-      return {
-        neynar: this.neynarMethod.bind(this),
-      } as T extends "neynar" ? NeynarInstance : never
-    } else if(this.name === "airstack") {
-      return {
-        airstack: this.airstackMethod.bind(this),
-      } as T extends "airstack" ? AirstackInstance : never;
-    }
-    throw new Error("Invalid service name");
-  }
-}
+//   public getInstance() {
+//     if (this.name === "neynar") {
+//       return {
+//         neynar: this.neynarMethod.bind(this),
+//       } as T extends "neynar" ? NeynarInstance : never;
+//     } else if (this.name === "airstack") {
+//       return {
+//         airstack: this.airstackMethod.bind(this),
+//       } as T extends "airstack" ? AirstackInstance : never;
+//     }
+//     throw new Error("Invalid service name");
+//   }
+// }
 
-const T = 'neynar'
-const myClass = new MyClass(T);
-myClass.getInstance<typeof T>().neynar('')
+// const T = "neynar";
+// const myClass = new MyClass(T);
+// myClass.getInstance<typeof T>().neynar("");

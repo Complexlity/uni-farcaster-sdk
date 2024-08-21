@@ -84,8 +84,8 @@ export class airstackService implements Service {
   ): Promise<DataOrError<User>> {
     const query = userByFidQuery(fid, viewerFid);
     const { data, error } = await fetchQuery<AirstackUserQueryResult>(
-      query,
       this.apiKey,
+      query,
     );
     if (error) {
       return { data, error };
@@ -108,7 +108,7 @@ export class airstackService implements Service {
     const query = userByUsernameQuery(username);
     const { data, error } = await fetchQuery<
       Omit<AirstackUserQueryResult, "Following" | "Followedby">
-    >(query, this.apiKey);
+    >(this.apiKey, query);
     if (error) {
       return { data, error };
     }
@@ -127,8 +127,8 @@ export class airstackService implements Service {
   ): Promise<DataOrError<Cast>> {
     const query = castByHashQuery(hash, viewerFid);
     const { data, error } = await fetchQuery<AirstackCastQueryResult>(
-      query,
       this.apiKey,
+      query,
     );
     if (error) {
       return { data, error };
@@ -143,13 +143,17 @@ export class airstackService implements Service {
   ): Promise<DataOrError<Cast>> {
     const query = castByUrlQuery(url, viewerFid);
     const { data, error } = await fetchQuery<AirstackCastQueryResult>(
-      query,
       this.apiKey,
+      query,
     );
     if (error) {
       return { data, error };
     }
     const returnedData = data;
     return { data: this.getCastFromAirstackResult(returnedData), error: null };
+  }
+
+  async customQuery<T>(query: string, variables: Record<string, unknown>) {
+    return await fetchQuery<T>(this.apiKey, query, variables);
   }
 }
