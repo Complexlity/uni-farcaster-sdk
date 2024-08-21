@@ -1,7 +1,7 @@
 import { DEFAULTS } from "./constants";
 import type { Cast, User, UserWithOptionalViewerContext } from "./types";
 
-export type StringOrNumberArray = unknown[]
+export type StringOrNumberArray = unknown[];
 
 type MapData<T> = {
   data: T;
@@ -29,6 +29,7 @@ export class Cache {
     }
 
     if (cachedData) {
+      //Cache is expired. Delete it
       this.cache.delete(key);
     }
     return null;
@@ -47,7 +48,6 @@ export class Cache {
 
   private getCustomCachedData(params: any[]) {
     const cacheKey = `${["custom", ...params].join(":")}`;
-    console.log({getKey: cacheKey})
     return this.getData<unknown>(cacheKey) as unknown | null;
   }
   private setUserCachedData(data: User, params: StringOrNumberArray) {
@@ -70,7 +70,6 @@ export class Cache {
   private setCustomCachedData(data: unknown, params: any[]) {
     const cacheKey = `${["custom", ...params].join(":")}`;
     const setData = { data, timestamp: Date.now() };
-    console.log({setKey: cacheKey})
     this.cache.set(cacheKey, setData);
     return data;
   }
@@ -87,7 +86,7 @@ export class Cache {
         : never;
     }
     if (type === "custom") {
-      const striginfiedParams = params.map(param => JSON.stringify(param));
+      const striginfiedParams = params.map((param) => JSON.stringify(param));
       return this.getCustomCachedData(striginfiedParams) as T extends "custom"
         ? unknown | null
         : never;
@@ -100,7 +99,7 @@ export class Cache {
     type: T,
     data: CacheTypes[T],
     params: StringOrNumberArray,
-  ): User | Cast | unknown{
+  ): User | Cast | unknown {
     if (type === "user") {
       return this.setUserCachedData(data as User, params);
     }
@@ -108,7 +107,7 @@ export class Cache {
       return this.setCastCachedData(data as Cast, params);
     }
     if (type === "custom") {
-      const striginfiedParams = params.map(param => JSON.stringify(param));
+      const striginfiedParams = params.map((param) => JSON.stringify(param));
       return this.setCustomCachedData(data as unknown, striginfiedParams);
     }
     //Add more cache types if needed
@@ -123,6 +122,6 @@ type CacheConfig = {
 export type CacheTypes = {
   user: User | UserWithOptionalViewerContext;
   cast: Cast;
-  custom: any
+  custom: any;
 };
 export type CacheKeys = keyof CacheTypes;

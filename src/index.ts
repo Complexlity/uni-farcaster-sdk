@@ -1,8 +1,4 @@
-import {
-  Cache,
-  type CacheKeys,
-  type CacheTypes
-} from "@/lib/cache";
+import { Cache, type CacheKeys, type CacheTypes } from "@/lib/cache";
 import { DEFAULTS } from "@/lib/constants";
 import { LogLevel, Logger, Noop } from "@/lib/logger";
 import type { Cast, Config, DataOrError, Service, User } from "@/lib/types";
@@ -36,7 +32,13 @@ class uniFarcasterSdk implements Omit<Service, "name"> {
       return new Proxy(this, {
         get(target, prop) {
           const propKey = prop.toString();
-          const ignoreMethods = ["logger", "withCache", "createService", "neynar", "airstack"];
+          const ignoreMethods = [
+            "logger",
+            "withCache",
+            "createService",
+            "neynar",
+            "airstack",
+          ];
 
           // Get the original method or property
           //@ts-expect-error
@@ -52,7 +54,7 @@ class uniFarcasterSdk implements Omit<Service, "name"> {
                 .logger(target.activeService)
                 .info(
                   `${propKey}${
-                    args.length > 0 ? ` Args: [${args}]` : ""
+                    args.length > 0 ? ` args: [${args}]` : ""
                   } running...`
                 );
 
@@ -63,7 +65,7 @@ class uniFarcasterSdk implements Omit<Service, "name"> {
                     .logger(target.activeService)
                     .error(
                       `${propKey}${
-                        args.length > 0 ? `, Args: [${args}]` : ""
+                        args.length > 0 ? `, args: [${args}]` : ""
                       } erorr ❌`
                     );
                 } else {
@@ -71,7 +73,7 @@ class uniFarcasterSdk implements Omit<Service, "name"> {
                     .logger(target.activeService)
                     .success(
                       `${propKey}${
-                        args.length > 0 ? `, Args: [${args}]` : ""
+                        args.length > 0 ? `, args: [${args}]` : ""
                       } success ✅`
                     );
                 }
@@ -81,7 +83,7 @@ class uniFarcasterSdk implements Omit<Service, "name"> {
                   .logger(target.activeService)
                   .error(
                     `${propKey}${
-                      args.length > 0 ? `, Args: [${args}]` : ""
+                      args.length > 0 ? `, args: [${args}]` : ""
                     } erorr ❌`
                   );
                 throw error; // Re-throw the error after logging it
@@ -107,18 +109,18 @@ class uniFarcasterSdk implements Omit<Service, "name"> {
   ) {
     const cachedData = this.cache.get(type, params);
     if (cachedData) {
-      this.logger({ name: "cache hit" }).success(`Args: ${params.join(" ")}`);
+      this.logger({ name: "cache hit" }).success(`args: ${params.join(" ")}`);
       return {
         data: cachedData,
         error: null,
       };
     }
-    this.logger({ name: "cache miss" }).error(`Args: ${params.join(" ")}`);
+    this.logger({ name: "cache miss" }).error(`args: ${params.join(" ")}`);
     const result = await fn.apply(thisArg || this.activeService, params);
     const { data } = result;
     if (data) {
       //First params is the fid or username and we don't want to add that since we would get that from data
-      const setParams = type === "custom" ? params: params.slice(1)
+      const setParams = type === "custom" ? params : params.slice(1);
       this.cache.set(type, data, setParams);
     }
     return result;
@@ -160,10 +162,12 @@ class uniFarcasterSdk implements Omit<Service, "name"> {
   ) {
     if (!this.airstackApiKey) throw new Error("No airstack api key provided");
     const airstackService = new services.airstack(this.airstackApiKey);
-    const res = await this.withCache("custom", airstackService.customQuery<T>, [
-      query,
-      variables,
-    ], airstackService);
+    const res = await this.withCache(
+      "custom",
+      airstackService.customQuery<T>,
+      [query, variables],
+      airstackService
+    );
     return res;
   }
 
@@ -173,10 +177,12 @@ class uniFarcasterSdk implements Omit<Service, "name"> {
   ) {
     if (!this.neynarApiKey) throw new Error("No neynar api key provided");
     const neynarService = new services.neynar(this.neynarApiKey);
-    const res = await this.withCache("custom", neynarService.customQuery<T>, [
-      endpoint,
-      params,
-    ], neynarService);
+    const res = await this.withCache(
+      "custom",
+      neynarService.customQuery<T>,
+      [endpoint, params],
+      neynarService
+    );
     return res;
   }
 

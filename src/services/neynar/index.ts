@@ -196,7 +196,7 @@ export class neynarService implements Service {
     }
   }
 
-  async customQuery<T>(query: string, params: Record<string, unknown> ) {
+  async customQuery<T>(query: string, params: Record<string, unknown>) {
     try {
       const result = await api.get(query, {
         params,
