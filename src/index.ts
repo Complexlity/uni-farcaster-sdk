@@ -32,12 +32,11 @@ class uniFarcasterSdk implements Omit<Service, "name"> {
       return new Proxy(this, {
         get(target, prop) {
           const propKey = prop.toString();
-          const ignoreMethods = [
+          const customMethods = ["neynar", "airstack"];
+          const ignoredMethods = [
             "logger",
             "withCache",
             "createService",
-            "neynar",
-            "airstack",
           ];
 
           // Get the original method or property
@@ -45,54 +44,64 @@ class uniFarcasterSdk implements Omit<Service, "name"> {
           const originalMethod = target[propKey];
 
           // Check if the property is a function and should not be ignored
-          if (
-            typeof originalMethod === "function" &&
-            !ignoreMethods.includes(propKey)
-          ) {
-            return (...args: any[]) => {
-              target
-                .logger(target.activeService)
-                .info(
-                  `${propKey}${
-                    args.length > 0 ? ` args: [${args}]` : ""
-                  } running...`
-                );
+          if(typeof originalMethod === "function" ) {
+            if (!ignoredMethods.includes(propKey)) {
+              return async (...args: any[]) => {
+                const loggedService = customMethods.includes(propKey) ? {name: `custom`} : target.activeService;
+                const loggedArgs = customMethods.includes(propKey) ? "" : args
+                target
+                  .logger(loggedService)
+                  .info(
+                    `${propKey}${
+                      loggedArgs.length > 0 ? ` args: [${loggedArgs}]` : ""
+                    } running...`,
+                  );
 
-              try {
-                const result = originalMethod.apply(target, args);
-                if (result.error) {
+                try {
+                  let result;
+                  if(typeof originalMethod.apply === "function" && originalMethod.constructor.name === "AsyncFunction") {
+                    result = await originalMethod.apply(target, args);
+                  } else {
+                    result = originalMethod.apply(target, args);
+                  }
+
+                  if (result.error) {
+                    target
+                      .logger(loggedService)
+                      .error(
+                        `${propKey}:${
+                          loggedArgs.length > 0 ? `, args: [${loggedArgs}]` : ""
+                        } ${result.error.message} ❌`,
+                      );
+                  } else {
+                    target
+                      .logger(loggedService)
+                      .success(
+                        `${propKey}: ${
+                          loggedArgs.length > 0 ? `, args: [${loggedArgs}]` : ""
+                        } success ✅`,
+                      );
+                  }
+                  return result;
+                } catch (error) {
+                  const loggedError = error && typeof error === "object" && "message" in error ? error.message : JSON.stringify(error);
                   target
-                    .logger(target.activeService)
+                    .logger(loggedService)
                     .error(
                       `${propKey}${
-                        args.length > 0 ? `, args: [${args}]` : ""
-                      } erorr ❌`
+                        loggedArgs.length > 0 ? `, args: [${loggedArgs}]` : ""
+                      } ${loggedError} ❌`,
                     );
-                } else {
-                  target
-                    .logger(target.activeService)
-                    .success(
-                      `${propKey}${
-                        args.length > 0 ? `, args: [${args}]` : ""
-                      } success ✅`
-                    );
+                  throw error; // Re-throw the error after logging it
                 }
-                return result;
-              } catch (error) {
-                target
-                  .logger(target.activeService)
-                  .error(
-                    `${propKey}${
-                      args.length > 0 ? `, args: [${args}]` : ""
-                    } erorr ❌`
-                  );
-                throw error; // Re-throw the error after logging it
-              }
-            };
-          } else if (typeof originalMethod === "function") {
-            return (...args: any[]) => {
-              return originalMethod.apply(target, args);
-            };
+              };
+            }
+
+            else {
+              return (...args: any[]) => {
+                return originalMethod.apply(target, args);
+              };
+            }
           }
           // If it's not a function or is in the ignore list, return the property value directly
           return originalMethod;
@@ -105,17 +114,20 @@ class uniFarcasterSdk implements Omit<Service, "name"> {
     type: T,
     fn: (...args: any[]) => Promise<DataOrError<CacheTypes[T]>>,
     params: unknown[],
-    thisArg?: any
+    thisArg?: Service,
   ) {
+    //Don't log params of custom functions as they can be too large
+    const description = type === "custom" ? `custom ${thisArg?.name || ""}` : `${fn.name} args: ${params.join(" ")}`;
+    console.log({description})
     const cachedData = this.cache.get(type, params);
     if (cachedData) {
-      this.logger({ name: "cache hit" }).success(`args: ${params.join(" ")}`);
+      this.logger({ name: "cache hit" }).success(`${description}`);
       return {
         data: cachedData,
         error: null,
       };
     }
-    this.logger({ name: "cache miss" }).error(`args: ${params.join(" ")}`);
+    this.logger({ name: "cache miss" }).warning(`${description}`);
     const result = await fn.apply(thisArg || this.activeService, params);
     const { data } = result;
     if (data) {
@@ -158,7 +170,7 @@ class uniFarcasterSdk implements Omit<Service, "name"> {
 
   public async airstack<T = unknown>(
     query: string,
-    variables: Record<string, unknown> = {}
+    variables: Record<string, unknown> = {},
   ) {
     if (!this.airstackApiKey) throw new Error("No airstack api key provided");
     const airstackService = new services.airstack(this.airstackApiKey);
@@ -166,14 +178,14 @@ class uniFarcasterSdk implements Omit<Service, "name"> {
       "custom",
       airstackService.customQuery<T>,
       [query, variables],
-      airstackService
+      airstackService,
     );
     return res;
   }
 
   public async neynar<T = unknown>(
     endpoint: string,
-    params: Record<string, unknown> = {}
+    params: Record<string, unknown> = {},
   ) {
     if (!this.neynarApiKey) throw new Error("No neynar api key provided");
     const neynarService = new services.neynar(this.neynarApiKey);
@@ -181,7 +193,7 @@ class uniFarcasterSdk implements Omit<Service, "name"> {
       "custom",
       neynarService.customQuery<T>,
       [endpoint, params],
-      neynarService
+      neynarService,
     );
     return res;
   }
@@ -190,19 +202,19 @@ class uniFarcasterSdk implements Omit<Service, "name"> {
     const res = (await this.withCache(
       "user",
       this.activeService?.getUserByFid,
-      [fid, viewerFid]
+      [fid, viewerFid],
     )) as DataOrError<User>;
     return res;
   }
 
   public async getUserByUsername(
     username: string,
-    viewerFid: number = DEFAULTS.fid
+    viewerFid: number = DEFAULTS.fid,
   ) {
     const res = await this.withCache(
       "user",
       this.activeService?.getUserByUsername,
-      [username, viewerFid]
+      [username, viewerFid],
     );
     return res;
   }
@@ -249,7 +261,7 @@ function evaluateConfig(config: Config) {
       activeServiceName = config.activeService;
     } else {
       const randomIndex = Math.floor(
-        Math.random() * Object.keys(services).length
+        Math.random() * Object.keys(services).length,
       );
       const service = Object.keys(services)[randomIndex] as TService;
 
