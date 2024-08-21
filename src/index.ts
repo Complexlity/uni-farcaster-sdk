@@ -123,7 +123,6 @@ class uniFarcasterSdk implements Omit<Service, "name"> {
       type === "custom"
         ? `custom ${thisArg?.name || ""}`
         : `${fn.name} args: ${params.join(" ")}`;
-    console.log({ description });
     const cachedData = this.cache.get(type, params);
     if (cachedData) {
       this.logger({ name: "cache hit" }).success(`${description}`);
@@ -192,7 +191,6 @@ class uniFarcasterSdk implements Omit<Service, "name"> {
     endpoint: string,
     params: Record<string, unknown> = {},
   ) {
-    console.log("I was called")
     if (!this.neynarApiKey) throw new Error("No neynar api key provided");
     const neynarService = new services.neynar(this.neynarApiKey);
     const res = await this.withCache(
