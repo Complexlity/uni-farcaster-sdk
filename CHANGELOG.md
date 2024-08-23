@@ -1,5 +1,11 @@
 # uni-farcaster-sdk
 
+## 0.0.15
+
+### Patch Changes
+
+- 27b1083: Update tests, readme
+
 ## 0.0.14
 
 ### Patch Changes
