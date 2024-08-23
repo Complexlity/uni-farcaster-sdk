@@ -3,6 +3,7 @@ import { afterEach, beforeEach, describe, expect, test } from "vitest";
 import { neynarService } from ".";
 import { DEFAULTS } from "../../lib/constants";
 import { runBasicTests } from "../../lib/utils";
+import { NEYNAR_DEFAULTS } from "./constants";
 import { NeynarV1User } from "./types";
 
 const service = new neynarService("test-api-key");
@@ -47,8 +48,8 @@ describe("getUserByFid", () => {
       ],
     };
 
-    nock(DEFAULTS.neynarApiUrl)
-      .get("/v2/farcaster/user/bulk")
+    nock(NEYNAR_DEFAULTS.baseApiUrl)
+      .get(NEYNAR_DEFAULTS.userByFidUrl)
       .query({ fids: `${fid}`, viewer_fid: `${viewerFid}` })
       .reply(200, mockResponse);
 
@@ -69,8 +70,8 @@ describe("getUserByFid", () => {
     });
   });
   test("handles API errors", async () => {
-    nock(DEFAULTS.neynarApiUrl)
-      .get("/v2/farcaster/user/bulk")
+    nock(NEYNAR_DEFAULTS.baseApiUrl)
+      .get(NEYNAR_DEFAULTS.userByFidUrl)
       .query(true)
       .reply(500, { error: { message: "Internal server error" } });
 
@@ -127,8 +128,8 @@ describe("getUserByUsername", () => {
       },
     };
 
-    nock(DEFAULTS.neynarApiUrl)
-      .get("/v1/farcaster/user-by-username")
+    nock(NEYNAR_DEFAULTS.baseApiUrl)
+      .get(NEYNAR_DEFAULTS.userByUsernameUrl)
       .query({ username, viewerFid: `${viewerFid}` })
       .reply(200, mockResponse);
 
@@ -150,8 +151,8 @@ describe("getUserByUsername", () => {
   });
 
   test("handles getUserByUsername API errors", async () => {
-    nock(DEFAULTS.neynarApiUrl)
-      .get("/v1/farcaster/user-by-username")
+    nock(NEYNAR_DEFAULTS.baseApiUrl)
+      .get(NEYNAR_DEFAULTS.userByUsernameUrl)
       .query(true)
       .reply(404, { error: { message: "User not found" } });
 
@@ -201,8 +202,8 @@ describe("getCastByHash", () => {
       },
     };
 
-    nock(DEFAULTS.neynarApiUrl)
-      .get("/v2/farcaster/cast")
+    nock(NEYNAR_DEFAULTS.baseApiUrl)
+      .get(NEYNAR_DEFAULTS.castUrl)
       .query({ type: "hash", identifier: hash, viewer_fid: `${viewerFid}` })
       .reply(200, mockResponse);
 
@@ -233,8 +234,8 @@ describe("getCastByHash", () => {
   });
 
   test("handles API errors", async () => {
-    nock(DEFAULTS.neynarApiUrl)
-      .get("/v2/farcaster/cast")
+    nock(NEYNAR_DEFAULTS.baseApiUrl)
+      .get(NEYNAR_DEFAULTS.castUrl)
       .query(true)
       .reply(400, { error: { message: "Invalid hash" } });
 
@@ -283,7 +284,7 @@ describe("getCastByUrl", () => {
       },
     };
 
-    nock(DEFAULTS.neynarApiUrl)
+    nock(NEYNAR_DEFAULTS.baseApiUrl)
       .get("/v2/farcaster/cast")
       .query({ type: "url", identifier: url, viewer_fid: `${viewerFid}` })
       .reply(200, mockResponse);
@@ -315,7 +316,7 @@ describe("getCastByUrl", () => {
   });
 
   test("handles API errors", async () => {
-    nock(DEFAULTS.neynarApiUrl)
+    nock(NEYNAR_DEFAULTS.baseApiUrl)
       .get("/v2/farcaster/cast")
       .query(true)
       .reply(403, { error: { message: "Unauthorized access" } });
@@ -329,7 +330,7 @@ describe("getCastByUrl", () => {
 
 describe("Non-axios errors", () => {
   test("handles non-Axios errors", async () => {
-    nock(DEFAULTS.neynarApiUrl)
+    nock(NEYNAR_DEFAULTS.baseApiUrl)
       .get("/v2/farcaster/user/bulk")
       .query(true)
       .replyWithError("Network error");

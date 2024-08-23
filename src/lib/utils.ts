@@ -9,17 +9,17 @@ type TestedService = Omit<Service, "name"> & { name: string };
 
 export function runBasicTests(service: TestedService) {
   describe(`basic tests ${service.name}`, () => {
-  const requiredMethods = [
-    "getUserByFid",
-    "getUserByUsername",
-    "getCastByHash",
-    "getCastByUrl",
-  ];
+    const requiredMethods = [
+      "getUserByFid",
+      "getUserByUsername",
+      "getCastByHash",
+      "getCastByUrl",
+    ];
 
     test(`${service.name} service should have all required methods`, async () => {
       for (const method of requiredMethods) {
         expect(service).toHaveProperty(method);
       }
-    })
+    });
   });
 }

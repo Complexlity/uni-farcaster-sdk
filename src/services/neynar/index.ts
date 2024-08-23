@@ -3,6 +3,7 @@ import type { Cast, DataOrError, Service, User } from "@/lib/types";
 import type { TService } from "@/services";
 import axios from "axios";
 import { AxiosError } from "axios";
+import { NEYNAR_DEFAULTS } from "./constants";
 import type {
   CastFetchResult,
   NeynarCast,
@@ -11,7 +12,7 @@ import type {
 } from "./types";
 import { convertToV2User } from "./utils";
 
-const BASE_URL = DEFAULTS.neynarApiUrl;
+const BASE_URL = NEYNAR_DEFAULTS.baseApiUrl;
 const api = axios.create({
   baseURL: BASE_URL,
 });
@@ -106,7 +107,7 @@ export class neynarService implements Service {
   ): Promise<DataOrError<User>> {
     try {
       const usersInfo = await api.get<{ users: NeynarUser[] }>(
-        "/v2/farcaster/user/bulk",
+        NEYNAR_DEFAULTS.userByFidUrl,
         {
           params: {
             fids: `${fid}`,
@@ -129,7 +130,7 @@ export class neynarService implements Service {
   ): Promise<DataOrError<Omit<User, "powerBadge">>> {
     try {
       const usersInfo = await api.get<{ result: { user: NeynarV1User } }>(
-        "/v1/farcaster/user-by-username",
+        NEYNAR_DEFAULTS.userByUsernameUrl,
         {
           params: {
             username: `${username}`,
@@ -153,7 +154,7 @@ export class neynarService implements Service {
     viewerFid: number = DEFAULTS.fid,
   ): Promise<DataOrError<Cast>> {
     try {
-      const castInfo = await api.get<CastFetchResult>("/v2/farcaster/cast", {
+      const castInfo = await api.get<CastFetchResult>(NEYNAR_DEFAULTS.castUrl, {
         params: {
           type: "hash",
           identifier: hash,
@@ -175,7 +176,7 @@ export class neynarService implements Service {
     viewerFid: number = DEFAULTS.fid,
   ): Promise<DataOrError<Cast>> {
     try {
-      const castInfo = await api.get<CastFetchResult>("/v2/farcaster/cast", {
+      const castInfo = await api.get<CastFetchResult>(NEYNAR_DEFAULTS.castUrl, {
         params: {
           type: "url",
           identifier: url,
