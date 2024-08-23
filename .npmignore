@@ -5,3 +5,7 @@ pnpm-lock.yaml
 tsconfig.json
 .gitignore
 .github
+.husky
+biome.json
+vite.config.mts
+.nvmrc
