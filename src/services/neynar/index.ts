@@ -30,17 +30,15 @@ export class neynarService implements Service {
   }
 
   private handleError(e: unknown) {
+    const GENERIC_ERROR_MESSAGE = "Something went wrong. Please try again";
     if (e instanceof AxiosError) {
       return {
         data: null,
-        error: { message: e.message },
+        error: {
+          message: e.response?.data?.error.message || GENERIC_ERROR_MESSAGE,
+        },
       };
-    } else if (
-      e &&
-      typeof e === "object" &&
-      "message" in e &&
-      typeof e.message == "string"
-    ) {
+    } else if (!!e && typeof e === "object" && "message" in e && e.message) {
       return {
         data: null,
         error: { message: e.message },
@@ -48,10 +46,9 @@ export class neynarService implements Service {
     }
     return {
       data: null,
-      error: { message: "Something went wrong. Please try again" },
+      error: { message: GENERIC_ERROR_MESSAGE },
     };
   }
-
   private getHeaders() {
     return {
       accept: "application/json",
