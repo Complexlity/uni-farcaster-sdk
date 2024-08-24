@@ -85,4 +85,5 @@ export type Config = (
       }
   ) & {
     cacheTtl?: number;
+    retries?: number;
   };

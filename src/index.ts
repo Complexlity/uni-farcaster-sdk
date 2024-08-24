@@ -1,7 +1,14 @@
 import { Cache, type CacheKeys, type CacheTypes } from "@/lib/cache";
 import { DEFAULTS } from "@/lib/constants";
 import { LogLevel, Logger, Noop } from "@/lib/logger";
-import type { Cast, Config, DataOrError, Service, User } from "@/lib/types";
+import type {
+  Cast,
+  Config,
+  DataOrError,
+  Service,
+  User,
+  UserWithOptionalViewerContext,
+} from "@/lib/types";
 import { isAddress } from "@/lib/utils";
 import { type TService, services } from "@/services";
 
@@ -13,6 +20,7 @@ class uniFarcasterSdk implements Omit<Service, "name"> {
   private debug = false;
   private logLevel: LogLevel | undefined;
   private cache: Cache = new Cache({ ttl: DEFAULTS.cacheTtl });
+  private retries: number = DEFAULTS.retries;
   constructor(config: Config) {
     const {
       activeServiceName,
@@ -21,6 +29,7 @@ class uniFarcasterSdk implements Omit<Service, "name"> {
       debug,
       logLevel,
       cacheTtl,
+      retries,
     } = evaluateConfig(config);
     this.neynarApiKey = neynarApiKey;
     this.airstackApiKey = airstackApiKey;
@@ -28,6 +37,7 @@ class uniFarcasterSdk implements Omit<Service, "name"> {
     this.logLevel = logLevel;
     this.debug = debug;
     this.cache = new Cache({ ttl: cacheTtl });
+    this.retries = retries;
     if (this.debug) {
       return new Proxy(this, {
         get(target, prop) {
@@ -110,6 +120,25 @@ class uniFarcasterSdk implements Omit<Service, "name"> {
         },
       });
     }
+  }
+
+  // Add this helper method
+  private async retryWrapper<T>(
+    fn: (...args: any[]) => Promise<DataOrError<T>>,
+    ...args: any[]
+  ): Promise<DataOrError<T>> {
+    let attempts = 0;
+    while (attempts <= this.retries) {
+      const result = await fn(...args);
+      if (!result.error) {
+        return result;
+      }
+      attempts++;
+      if (attempts <= this.retries) {
+        this.logger().warning(`Retry attempt ${attempts} of ${this.retries}`);
+      }
+    }
+    return await fn(...args); // Return the last attempt result
   }
 
   private async withCache<T extends CacheKeys>(
@@ -203,21 +232,40 @@ class uniFarcasterSdk implements Omit<Service, "name"> {
   }
 
   public async getUserByFid(fid: number, viewerFid: number = DEFAULTS.fid) {
-    const res = (await this.withCache(
-      "user",
-      this.activeService?.getUserByFid,
-      [fid, viewerFid],
-    )) as DataOrError<User>;
-    return res;
+    return this.retryWrapper(
+      async () =>
+        (await this.withCache("user", this.activeService.getUserByFid, [
+          fid,
+          viewerFid,
+        ])) as DataOrError<User>,
+      fid,
+      viewerFid,
+    );
+
+    // const res = (await this.withCache(
+    //   "user",
+    //   this.activeService?.getUserByFid,
+    //   [fid, viewerFid]
+    // )) as DataOrError<User>;
+    // return res;
   }
 
   public async getUserByUsername(
     username: string,
     viewerFid: number = DEFAULTS.fid,
   ) {
+    return this.retryWrapper(
+      async () =>
+        (await this.withCache("user", this.activeService.getUserByUsername, [
+          username,
+          viewerFid,
+        ])) as DataOrError<UserWithOptionalViewerContext>,
+      username,
+      viewerFid,
+    );
     const res = await this.withCache(
       "user",
-      this.activeService?.getUserByUsername,
+      this.activeService.getUserByUsername,
       [username, viewerFid],
     );
     return res;
@@ -229,20 +277,38 @@ class uniFarcasterSdk implements Omit<Service, "name"> {
     if (!isValidHash) {
       res = { data: null, error: { message: "Invalid hash" } };
     } else {
-      res = await this.withCache("cast", this.activeService?.getCastByHash, [
+      res = await this.retryWrapper(
+        async () =>
+          (await this.withCache("cast", this.activeService.getCastByHash, [
+            hash,
+            viewerFid,
+          ])) as DataOrError<Cast>,
         hash,
         viewerFid,
-      ]);
+      );
+      // res = await this.withCache("cast", this.activeService?.getCastByHash, [
+      //   hash,
+      //   viewerFid,
+      // ]);
     }
     return res;
   }
 
   public async getCastByUrl(url: string, viewerFid: number = DEFAULTS.fid) {
-    const res = await this.withCache("cast", this.activeService?.getCastByUrl, [
+    return this.retryWrapper(
+      async () =>
+        (await this.withCache("cast", this.activeService.getCastByUrl, [
+          url,
+          viewerFid,
+        ])) as DataOrError<Cast>,
       url,
       viewerFid,
-    ]);
-    return res;
+    );
+    // const res = await this.withCache("cast", this.activeService?.getCastByUrl, [
+    //   url,
+    //   viewerFid,
+    // ]);
+    // return res;
   }
 }
 
@@ -253,6 +319,7 @@ function evaluateConfig(config: Config) {
   let debug = false;
   let logLevel: LogLevel | undefined = undefined;
   let cacheTtl: number = DEFAULTS.cacheTtl;
+  let retries: number = DEFAULTS.retries;
   if (
     "neynarApiKey" in config &&
     "airstackApiKey" in config &&
@@ -295,6 +362,14 @@ function evaluateConfig(config: Config) {
     }
   }
 
+  if (
+    "retries" in config &&
+    typeof config.retries === "number" &&
+    config.retries >= 0
+  ) {
+    retries = config.retries;
+  }
+
   return {
     activeServiceName,
     neynarApiKey,
@@ -302,6 +377,7 @@ function evaluateConfig(config: Config) {
     debug,
     logLevel,
     cacheTtl,
+    retries,
   };
 }
 

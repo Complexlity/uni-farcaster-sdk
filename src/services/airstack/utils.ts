@@ -1,8 +1,7 @@
-import { DEFAULTS } from "@/lib/constants";
 import type { DataOrError } from "@/lib/types";
 import axios from "axios";
 
-const AIRSTACK_ENDPOINT = DEFAULTS.airstackApiUrl;
+const AIRSTACK_ENDPOINT = "https://api.airstack.xyz/gql";
 
 const socialReturnedQuery = `
 			userId
