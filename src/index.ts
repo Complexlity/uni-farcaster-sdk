@@ -1,14 +1,7 @@
 import { Cache, type CacheKeys, type CacheTypes } from "@/lib/cache";
 import { DEFAULTS } from "@/lib/constants";
 import { LogLevel, Logger, Noop } from "@/lib/logger";
-import type {
-  Cast,
-  Config,
-  DataOrError,
-  Service,
-  User,
-  UserWithOptionalViewerContext,
-} from "@/lib/types";
+import type { Cast, Config, DataOrError, Service, User } from "@/lib/types";
 import { isAddress } from "@/lib/utils";
 import { type TService, services } from "@/services";
 
@@ -122,23 +115,27 @@ class uniFarcasterSdk implements Omit<Service, "name"> {
     }
   }
 
-  // Add this helper method
   private async retryWrapper<T>(
     fn: (...args: any[]) => Promise<DataOrError<T>>,
     ...args: any[]
   ): Promise<DataOrError<T>> {
     let attempts = 0;
+
+    // console.log(this.retries)
     while (attempts <= this.retries) {
       const result = await fn(...args);
+
       if (!result.error) {
         return result;
       }
       attempts++;
       if (attempts <= this.retries) {
-        this.logger().warning(`Retry attempt ${attempts} of ${this.retries}`);
+        this.logger({ name: "retrying..." }).warning(
+          `attmept ${attempts} of ${this.retries}`,
+        );
       }
     }
-    return await fn(...args); // Return the last attempt result
+    return await fn(...args);
   }
 
   private async withCache<T extends CacheKeys>(
@@ -161,7 +158,10 @@ class uniFarcasterSdk implements Omit<Service, "name"> {
       };
     }
     this.logger({ name: "cache miss" }).warning(`${description}`);
-    const result = await fn.apply(thisArg || this.activeService, params);
+    const result = await this.retryWrapper(
+      async () => fn.apply(thisArg || this.activeService, params),
+      ...params,
+    );
     const { data } = result;
     if (data) {
       //First params is the fid or username and we don't want to add that since we would get that from data
@@ -207,13 +207,12 @@ class uniFarcasterSdk implements Omit<Service, "name"> {
   ) {
     if (!this.airstackApiKey) throw new Error("No airstack api key provided");
     const airstackService = new services.airstack(this.airstackApiKey);
-    const res = await this.withCache(
+    return await this.withCache(
       "custom",
       airstackService.customQuery<T>,
       [query, variables],
       airstackService,
     );
-    return res;
   }
 
   public async neynar<T = unknown>(
@@ -222,47 +221,28 @@ class uniFarcasterSdk implements Omit<Service, "name"> {
   ) {
     if (!this.neynarApiKey) throw new Error("No neynar api key provided");
     const neynarService = new services.neynar(this.neynarApiKey);
-    const res = await this.withCache(
+
+    return await this.withCache(
       "custom",
       neynarService.customQuery<T>,
       [endpoint, params],
       neynarService,
     );
-    return res;
   }
 
   public async getUserByFid(fid: number, viewerFid: number = DEFAULTS.fid) {
-    return this.retryWrapper(
-      async () =>
-        (await this.withCache("user", this.activeService.getUserByFid, [
-          fid,
-          viewerFid,
-        ])) as DataOrError<User>,
-      fid,
-      viewerFid,
-    );
-
-    // const res = (await this.withCache(
-    //   "user",
-    //   this.activeService?.getUserByFid,
-    //   [fid, viewerFid]
-    // )) as DataOrError<User>;
-    // return res;
+    const res = (await this.withCache(
+      "user",
+      this.activeService?.getUserByFid,
+      [fid, viewerFid],
+    )) as DataOrError<User>;
+    return res;
   }
 
   public async getUserByUsername(
     username: string,
     viewerFid: number = DEFAULTS.fid,
   ) {
-    return this.retryWrapper(
-      async () =>
-        (await this.withCache("user", this.activeService.getUserByUsername, [
-          username,
-          viewerFid,
-        ])) as DataOrError<UserWithOptionalViewerContext>,
-      username,
-      viewerFid,
-    );
     const res = await this.withCache(
       "user",
       this.activeService.getUserByUsername,
@@ -277,38 +257,20 @@ class uniFarcasterSdk implements Omit<Service, "name"> {
     if (!isValidHash) {
       res = { data: null, error: { message: "Invalid hash" } };
     } else {
-      res = await this.retryWrapper(
-        async () =>
-          (await this.withCache("cast", this.activeService.getCastByHash, [
-            hash,
-            viewerFid,
-          ])) as DataOrError<Cast>,
+      res = await this.withCache("cast", this.activeService?.getCastByHash, [
         hash,
         viewerFid,
-      );
-      // res = await this.withCache("cast", this.activeService?.getCastByHash, [
-      //   hash,
-      //   viewerFid,
-      // ]);
+      ]);
     }
     return res;
   }
 
   public async getCastByUrl(url: string, viewerFid: number = DEFAULTS.fid) {
-    return this.retryWrapper(
-      async () =>
-        (await this.withCache("cast", this.activeService.getCastByUrl, [
-          url,
-          viewerFid,
-        ])) as DataOrError<Cast>,
+    const res = await this.withCache("cast", this.activeService?.getCastByUrl, [
       url,
       viewerFid,
-    );
-    // const res = await this.withCache("cast", this.activeService?.getCastByUrl, [
-    //   url,
-    //   viewerFid,
-    // ]);
-    // return res;
+    ]);
+    return res;
   }
 }
 
