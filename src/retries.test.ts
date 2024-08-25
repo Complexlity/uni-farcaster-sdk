@@ -75,6 +75,7 @@ describe("uniFarcasterSdk with retries", () => {
     const result = await sdk.getUserByFid(mockUser.fid);
 
     expect(result).toEqual(errorResponse);
+    expect(mockService.getUserByFid).toHaveBeenCalledTimes(3);
   });
 
   test("should not retry if first attempt is successful", async () => {

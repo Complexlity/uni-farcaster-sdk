@@ -120,22 +120,25 @@ class uniFarcasterSdk implements Omit<Service, "name"> {
     ...args: any[]
   ): Promise<DataOrError<T>> {
     let attempts = 0;
-
+    let result: DataOrError<T> = {
+      data: null,
+      error: { message: "Something went wrong. Please try again" },
+    };
     // console.log(this.retries)
     while (attempts <= this.retries) {
-      const result = await fn(...args);
+      result = await fn(...args);
 
       if (!result.error) {
         return result;
       }
-      attempts++;
-      if (attempts <= this.retries) {
+      if (attempts > 0) {
         this.logger({ name: "retrying..." }).warning(
-          `attmept ${attempts} of ${this.retries}`,
+          `attempt ${attempts} of ${this.retries}`,
         );
       }
+      attempts++;
     }
-    return await fn(...args);
+    return result;
   }
 
   private async withCache<T extends CacheKeys>(

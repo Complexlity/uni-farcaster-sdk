@@ -33,13 +33,25 @@ export class neynarService implements Service {
   private handleError(e: unknown) {
     const GENERIC_ERROR_MESSAGE = "Something went wrong. Please try again";
     if (e instanceof AxiosError) {
+      const errorMessage =
+        typeof e.response?.data.message === "string"
+          ? e.response?.data.message
+          : typeof e.response?.data?.error?.message === "string"
+            ? e.response?.data?.error.message
+            : GENERIC_ERROR_MESSAGE;
       return {
         data: null,
         error: {
-          message: e.response?.data?.error.message || GENERIC_ERROR_MESSAGE,
+          message: errorMessage as string,
         },
       };
-    } else if (!!e && typeof e === "object" && "message" in e && e.message) {
+    } else if (
+      !!e &&
+      typeof e === "object" &&
+      "message" in e &&
+      e.message &&
+      typeof e.message === "string"
+    ) {
       return {
         data: null,
         error: { message: e.message },
