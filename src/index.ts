@@ -68,7 +68,7 @@ class uniFarcasterSdk implements Omit<Service, "name" | "customQuery"> {
                   .info(
                     `${propKey}${
                       loggedArgs.length > 0 ? ` args: [${loggedArgs}]` : ""
-                    } running...`
+                    } running...`,
                   );
 
                 try {
@@ -91,7 +91,7 @@ class uniFarcasterSdk implements Omit<Service, "name" | "customQuery"> {
                       .error(
                         `${propKey}:${
                           loggedArgs.length > 0 ? `, args: [${loggedArgs}]` : ""
-                        } ${result.error.message} ❌`
+                        } ${result.error.message} ❌`,
                       );
                   } else {
                     const loggedService = customMethods.includes(propKey)
@@ -102,7 +102,7 @@ class uniFarcasterSdk implements Omit<Service, "name" | "customQuery"> {
                       .success(
                         `${propKey}: ${
                           loggedArgs.length > 0 ? `, args: [${loggedArgs}]` : ""
-                        } success ✅`
+                        } success ✅`,
                       );
                   }
                   return result;
@@ -119,7 +119,7 @@ class uniFarcasterSdk implements Omit<Service, "name" | "customQuery"> {
                     .error(
                       `${propKey}${
                         loggedArgs.length > 0 ? `, args: [${loggedArgs}]` : ""
-                      } ${loggedError} ❌`
+                      } ${loggedError} ❌`,
                     );
                   throw error; // Re-throw the error after logging it
                 }
@@ -142,7 +142,7 @@ class uniFarcasterSdk implements Omit<Service, "name" | "customQuery"> {
     // fn: (...args: any[]) => Promise<DataOrError<CacheTypes[T]>>,
     fnName: keyof Service,
     params: any[],
-    thisArg?: Service
+    thisArg?: Service,
   ): Promise<DataOrError<CacheTypes[T]>> {
     let attempts = 0;
 
@@ -159,17 +159,17 @@ class uniFarcasterSdk implements Omit<Service, "name" | "customQuery"> {
       }
 
       this.logger({ name: "retrying..." }).warning(
-        `attempt ${attempts} of ${this.retries}`
+        `attempt ${attempts} of ${this.retries}`,
       );
       if (this.retryStrategy === "switch" && type !== "custom") {
         const remainingServices = this.possibleServices.filter(
-          (service) => service !== this.activeService.name
+          (service) => service !== this.activeService.name,
         );
         if (remainingServices.length > 0) {
           const nextService = remainingServices[0];
           this.setActiveService(remainingServices[0]);
           this.logger({ name: nextService }).info(
-            `Switched to ${nextService} service for retry`
+            `Switched to ${nextService} service for retry`,
           );
         } else {
           this.setActiveService(this.possibleServices[0]);
@@ -190,7 +190,7 @@ class uniFarcasterSdk implements Omit<Service, "name" | "customQuery"> {
     // fn: (...args: any[]) => Promise<DataOrError<CacheTypes[T]>>,
     fn: keyof Service,
     params: unknown[],
-    thisArg?: Service
+    thisArg?: Service,
   ) {
     //Don't log params of custom functions as they can be too large
     const description =
@@ -210,7 +210,7 @@ class uniFarcasterSdk implements Omit<Service, "name" | "customQuery"> {
       type,
       fn,
       params,
-      thisArg || undefined
+      thisArg || undefined,
     );
     const { data } = result;
     if (data) {
@@ -253,7 +253,7 @@ class uniFarcasterSdk implements Omit<Service, "name" | "customQuery"> {
 
   public async airstack(
     query: string,
-    variables: Record<string, unknown> = {}
+    variables: Record<string, unknown> = {},
   ) {
     if (!this.airstackApiKey) throw new Error("No airstack api key provided");
     const airstackService = new services.airstack(this.airstackApiKey);
@@ -261,7 +261,7 @@ class uniFarcasterSdk implements Omit<Service, "name" | "customQuery"> {
       "custom",
       "customQuery",
       [query, variables],
-      airstackService
+      airstackService,
     );
   }
 
@@ -273,7 +273,7 @@ class uniFarcasterSdk implements Omit<Service, "name" | "customQuery"> {
       "custom",
       "customQuery",
       [endpoint, params],
-      neynarService
+      neynarService,
     );
   }
 
@@ -287,7 +287,7 @@ class uniFarcasterSdk implements Omit<Service, "name" | "customQuery"> {
 
   public async getUserByUsername(
     username: string,
-    viewerFid: number = DEFAULTS.fid
+    viewerFid: number = DEFAULTS.fid,
   ) {
     const res = await this.withCache("user", "getUserByUsername", [
       username,
@@ -336,7 +336,7 @@ function evaluateConfig(config: Config) {
       activeServiceName = config.activeService;
     } else {
       const randomIndex = Math.floor(
-        Math.random() * Object.keys(services).length
+        Math.random() * Object.keys(services).length,
       );
       const service = Object.keys(services)[randomIndex] as TService;
 

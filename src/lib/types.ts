@@ -60,7 +60,10 @@ export interface Service {
   ): Promise<DataOrError<UserWithOptionalViewerContext>>;
   getCastByHash(hash: string, viewerFid?: number): Promise<DataOrError<Cast>>;
   getCastByUrl(url: string, viewerFid?: number): Promise<DataOrError<Cast>>;
-  customQuery<T>(query: string, params: Record<string, unknown>): Promise<DataOrError<T>>;
+  customQuery<T>(
+    query: string,
+    params: Record<string, unknown>,
+  ): Promise<DataOrError<T>>;
 }
 
 export type Config = (
@@ -87,7 +90,7 @@ export type Config = (
   ) & {
     cacheTtl?: number;
     retries?: number;
-    retryStrategy?: RetryStrategy
+    retryStrategy?: RetryStrategy;
   };
 
-export type RetryStrategy = "normal" | "switch"
+export type RetryStrategy = "normal" | "switch";
