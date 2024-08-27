@@ -40,4 +40,7 @@ export class hubService implements Service {
   async getCastByUrl(_url: string, _viewerFid: number) {
     return Promise.resolve({ data: null, error: new Error("Not implemented") });
   }
+  async customQuery(_query: string, _params: Record<string, unknown>) {
+    return Promise.resolve({ data: null, error: new Error("Not implemented") });
+  }
 }

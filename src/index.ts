@@ -1,11 +1,18 @@
 import { Cache, type CacheKeys, type CacheTypes } from "@/lib/cache";
 import { DEFAULTS } from "@/lib/constants";
 import { LogLevel, Logger, Noop } from "@/lib/logger";
-import type { Cast, Config, DataOrError, Service, User } from "@/lib/types";
+import type {
+  Cast,
+  Config,
+  DataOrError,
+  RetryStrategy,
+  Service,
+  User,
+} from "@/lib/types";
 import { isAddress } from "@/lib/utils";
 import { type TService, services } from "@/services";
 
-class uniFarcasterSdk implements Omit<Service, "name"> {
+class uniFarcasterSdk implements Omit<Service, "name" | "customQuery"> {
   private neynarApiKey: string | undefined;
   private airstackApiKey: string | undefined;
   public name = "uniFarcasterSdk";
@@ -13,6 +20,9 @@ class uniFarcasterSdk implements Omit<Service, "name"> {
   private debug = false;
   private logLevel: LogLevel | undefined;
   private cache: Cache = new Cache({ ttl: DEFAULTS.cacheTtl });
+  private retries: number = DEFAULTS.retries;
+  private retryStrategy: RetryStrategy = "normal";
+  private possibleServices: TService[] = [];
   constructor(config: Config) {
     const {
       activeServiceName,
@@ -21,6 +31,9 @@ class uniFarcasterSdk implements Omit<Service, "name"> {
       debug,
       logLevel,
       cacheTtl,
+      retries,
+      retryStrategy,
+      possibleServices,
     } = evaluateConfig(config);
     this.neynarApiKey = neynarApiKey;
     this.airstackApiKey = airstackApiKey;
@@ -28,6 +41,9 @@ class uniFarcasterSdk implements Omit<Service, "name"> {
     this.logLevel = logLevel;
     this.debug = debug;
     this.cache = new Cache({ ttl: cacheTtl });
+    this.retries = retries;
+    this.retryStrategy = retryStrategy;
+    this.possibleServices = possibleServices;
     if (this.debug) {
       return new Proxy(this, {
         get(target, prop) {
@@ -67,6 +83,9 @@ class uniFarcasterSdk implements Omit<Service, "name"> {
                   }
 
                   if (result.error) {
+                    const loggedService = customMethods.includes(propKey)
+                      ? { name: `custom` }
+                      : target.activeService;
                     target
                       .logger(loggedService)
                       .error(
@@ -75,6 +94,9 @@ class uniFarcasterSdk implements Omit<Service, "name"> {
                         } ${result.error.message} ❌`,
                       );
                   } else {
+                    const loggedService = customMethods.includes(propKey)
+                      ? { name: `custom` }
+                      : target.activeService;
                     target
                       .logger(loggedService)
                       .success(
@@ -85,6 +107,9 @@ class uniFarcasterSdk implements Omit<Service, "name"> {
                   }
                   return result;
                 } catch (error) {
+                  const loggedService = customMethods.includes(propKey)
+                    ? { name: `custom` }
+                    : target.activeService;
                   const loggedError =
                     error && typeof error === "object" && "message" in error
                       ? error.message
@@ -112,9 +137,77 @@ class uniFarcasterSdk implements Omit<Service, "name"> {
     }
   }
 
+  private async retryWrapper<T extends CacheKeys>(
+    type: T,
+    // fn: (...args: any[]) => Promise<DataOrError<CacheTypes[T]>>,
+    fnName: keyof Service,
+    params: any[],
+    thisArg?: Service,
+  ): Promise<DataOrError<CacheTypes[T]>> {
+    let attempts = 0;
+    let result: DataOrError<CacheTypes[T]> = {
+      data: null,
+      error: { message: "Something went wrong. Please try again later." },
+    };
+    const originalService = this.activeService;
+    let possibleServices = this.possibleServices.filter(
+      (service) => service !== originalService.name,
+    );
+    while (attempts <= this.retries) {
+      const serviceCalller = thisArg || this.activeService;
+
+      const fn = serviceCalller[fnName] as (
+        ...args: any[]
+      ) => Promise<DataOrError<T>>;
+      result = await fn.apply(serviceCalller, params);
+
+      if (!result.error) {
+        return result;
+      }
+
+      if (attempts === this.retries) {
+        break;
+      }
+
+      if (
+        this.retryStrategy.includes("switch") &&
+        type !== "custom" &&
+        this.possibleServices.length > 1
+      ) {
+        if (possibleServices.length === 0) {
+          const otherServices = this.possibleServices.filter(
+            (service) => service !== originalService.name,
+          );
+          possibleServices = [originalService.name, ...otherServices];
+        }
+        const nextService = possibleServices.shift() as TService;
+        this.setActiveService(nextService);
+        this.logger({ name: "switch" }).info(
+          `switched to ${nextService} service for retry`,
+        );
+      }
+      attempts++;
+      this.logger({ name: "retrying..." }).warning(
+        `attempt ${attempts} of ${this.retries}`,
+      );
+    }
+
+    if (
+      this.retryStrategy === "switchTemp" &&
+      this.possibleServices.length > 1
+    ) {
+      this.activeService = originalService;
+      this.logger({ name: "switch temp" }).info(
+        `reverted back to ${originalService.name}`,
+      );
+    }
+    return result;
+  }
+
   private async withCache<T extends CacheKeys>(
     type: T,
-    fn: (...args: any[]) => Promise<DataOrError<CacheTypes[T]>>,
+    // fn: (...args: any[]) => Promise<DataOrError<CacheTypes[T]>>,
+    fn: keyof Service,
     params: unknown[],
     thisArg?: Service,
   ) {
@@ -122,7 +215,7 @@ class uniFarcasterSdk implements Omit<Service, "name"> {
     const description =
       type === "custom"
         ? `custom ${thisArg?.name || ""}`
-        : `${fn.name} args: ${params.join(" ")}`;
+        : `${fn} args: ${params.join(" ")}`;
     const cachedData = this.cache.get(type, params);
     if (cachedData) {
       this.logger({ name: "cache hit" }).success(`${description}`);
@@ -132,7 +225,12 @@ class uniFarcasterSdk implements Omit<Service, "name"> {
       };
     }
     this.logger({ name: "cache miss" }).warning(`${description}`);
-    const result = await fn.apply(thisArg || this.activeService, params);
+    const result = await this.retryWrapper(
+      type,
+      fn,
+      params,
+      thisArg || undefined,
+    );
     const { data } = result;
     if (data) {
       //First params is the fid or username and we don't want to add that since we would get that from data
@@ -165,49 +263,44 @@ class uniFarcasterSdk implements Omit<Service, "name"> {
   }
 
   public getActiveService() {
-    return this.activeService?.name;
+    return this.activeService.name;
   }
 
   public setActiveService(service: TService) {
     this.activeService = this.createService(service);
   }
 
-  public async airstack<T = unknown>(
+  public async airstack(
     query: string,
     variables: Record<string, unknown> = {},
   ) {
     if (!this.airstackApiKey) throw new Error("No airstack api key provided");
     const airstackService = new services.airstack(this.airstackApiKey);
-    const res = await this.withCache(
+    return await this.withCache(
       "custom",
-      airstackService.customQuery<T>,
+      "customQuery",
       [query, variables],
       airstackService,
     );
-    return res;
   }
 
-  public async neynar<T = unknown>(
-    endpoint: string,
-    params: Record<string, unknown> = {},
-  ) {
+  public async neynar(endpoint: string, params: Record<string, unknown> = {}) {
     if (!this.neynarApiKey) throw new Error("No neynar api key provided");
     const neynarService = new services.neynar(this.neynarApiKey);
-    const res = await this.withCache(
+
+    return await this.withCache(
       "custom",
-      neynarService.customQuery<T>,
+      "customQuery",
       [endpoint, params],
       neynarService,
     );
-    return res;
   }
 
   public async getUserByFid(fid: number, viewerFid: number = DEFAULTS.fid) {
-    const res = (await this.withCache(
-      "user",
-      this.activeService?.getUserByFid,
-      [fid, viewerFid],
-    )) as DataOrError<User>;
+    const res = (await this.withCache("user", "getUserByFid", [
+      fid,
+      viewerFid,
+    ])) as DataOrError<User>;
     return res;
   }
 
@@ -215,11 +308,10 @@ class uniFarcasterSdk implements Omit<Service, "name"> {
     username: string,
     viewerFid: number = DEFAULTS.fid,
   ) {
-    const res = await this.withCache(
-      "user",
-      this.activeService?.getUserByUsername,
-      [username, viewerFid],
-    );
+    const res = await this.withCache("user", "getUserByUsername", [
+      username,
+      viewerFid,
+    ]);
     return res;
   }
 
@@ -229,19 +321,13 @@ class uniFarcasterSdk implements Omit<Service, "name"> {
     if (!isValidHash) {
       res = { data: null, error: { message: "Invalid hash" } };
     } else {
-      res = await this.withCache("cast", this.activeService?.getCastByHash, [
-        hash,
-        viewerFid,
-      ]);
+      res = await this.withCache("cast", "getCastByHash", [hash, viewerFid]);
     }
     return res;
   }
 
   public async getCastByUrl(url: string, viewerFid: number = DEFAULTS.fid) {
-    const res = await this.withCache("cast", this.activeService?.getCastByUrl, [
-      url,
-      viewerFid,
-    ]);
+    const res = await this.withCache("cast", "getCastByUrl", [url, viewerFid]);
     return res;
   }
 }
@@ -253,6 +339,9 @@ function evaluateConfig(config: Config) {
   let debug = false;
   let logLevel: LogLevel | undefined = undefined;
   let cacheTtl: number = DEFAULTS.cacheTtl;
+  let retries: number = DEFAULTS.retries;
+  let retryStrategy: RetryStrategy = "normal";
+  let possibleServices: TService[] = [];
   if (
     "neynarApiKey" in config &&
     "airstackApiKey" in config &&
@@ -261,6 +350,7 @@ function evaluateConfig(config: Config) {
   ) {
     neynarApiKey = config.neynarApiKey;
     airstackApiKey = config.airstackApiKey;
+    possibleServices = ["neynar", "airstack"];
     if (config.activeService) {
       activeServiceName = config.activeService;
     } else {
@@ -274,9 +364,11 @@ function evaluateConfig(config: Config) {
   } else if ("neynarApiKey" in config) {
     neynarApiKey = config.neynarApiKey;
     activeServiceName = "neynar";
+    possibleServices = ["neynar"];
   } else if (config.airstackApiKey) {
     airstackApiKey = config.airstackApiKey;
     activeServiceName = "airstack";
+    possibleServices = ["airstack"];
   } else {
     throw new Error("You must provide either a neynarApiKey or airstackApiKey");
   }
@@ -295,6 +387,17 @@ function evaluateConfig(config: Config) {
     }
   }
 
+  if (
+    "retries" in config &&
+    typeof config.retries === "number" &&
+    config.retries >= 0
+  ) {
+    retries = config.retries;
+  }
+  if ("retryStrategy" in config && config.retryStrategy) {
+    retryStrategy = config.retryStrategy;
+  }
+
   return {
     activeServiceName,
     neynarApiKey,
@@ -302,6 +405,9 @@ function evaluateConfig(config: Config) {
     debug,
     logLevel,
     cacheTtl,
+    retries,
+    retryStrategy,
+    possibleServices,
   };
 }
 

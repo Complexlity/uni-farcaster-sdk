@@ -19,6 +19,7 @@ const service = new uniFarcasterSdk({
 });
 
 const mockUser = { fid: 123, username: "testuser" };
+const DUMMY_CAST_HASH = "0x59821dAf7b797D926440C9088bb91e018d6556B8";
 
 runBasicTests(service);
 
@@ -184,7 +185,7 @@ describe("main cache", () => {
 
   test("should use cache for getCastByHash", async () => {
     const mockCast = {
-      hash: "0x59821dAf7b797D926440C9088bb91e018d6556B8",
+      hash: DUMMY_CAST_HASH,
       url: "https://example.com/cast/mockUser.fid",
     };
     mockService.getCastByHash.mockResolvedValueOnce({
@@ -211,7 +212,7 @@ describe("main cache", () => {
   test("should use cache for getCastByUrl", async () => {
     const mockCast = {
       url: "https://example.com/cast/mockUser.fid",
-      hash: "0x59821dAf7b797D926440C9088bb91e018d6556B8",
+      hash: DUMMY_CAST_HASH,
     };
     mockService.getCastByUrl.mockResolvedValueOnce({
       data: mockCast,
