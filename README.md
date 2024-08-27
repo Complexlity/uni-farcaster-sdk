@@ -132,3 +132,4 @@ Check if error is not null to knowif there was an error and handle it accordingl
 - Add neynar custom support where you can pass custom neynar rest endpoints if you need more than the sdk offers ✅
 - Add an optional `retry` config to all queries and the option to switch service if there's an error
 i.e If the current active service is airstack and the query fails, it will try to use neynar`
+✅
