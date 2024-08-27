@@ -197,7 +197,7 @@ class uniFarcasterSdk implements Omit<Service, "name" | "customQuery"> {
       this.possibleServices.length > 1
     ) {
       this.activeService = originalService;
-      this.logger({ name: "switch temp" }).info(
+      this.logger({ name: "switch" }).info(
         `reverted back to ${originalService.name}`,
       );
     }
