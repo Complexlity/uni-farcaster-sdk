@@ -4,6 +4,12 @@
 
 ### Patch Changes
 
+- 84640ad: Add retries and retry strategies
+
+## 0.0.15
+
+### Patch Changes
+
 - 27b1083: Update tests, readme
 
 ## 0.0.14
