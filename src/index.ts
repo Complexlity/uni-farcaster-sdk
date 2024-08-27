@@ -145,44 +145,63 @@ class uniFarcasterSdk implements Omit<Service, "name" | "customQuery"> {
     thisArg?: Service,
   ): Promise<DataOrError<CacheTypes[T]>> {
     let attempts = 0;
-
-    while (attempts < this.retries) {
+    let result: DataOrError<CacheTypes[T]> = {
+      data: null,
+      error: { message: "Something went wrong. Please try again later." },
+    };
+    const originalService = this.activeService;
+    let possibleServices = this.possibleServices.filter(
+      (service) => service !== originalService.name,
+    );
+    while (attempts <= this.retries) {
       const serviceCalller = thisArg || this.activeService;
 
       const fn = serviceCalller[fnName] as (
         ...args: any[]
       ) => Promise<DataOrError<T>>;
-      const result = await fn.apply(serviceCalller, params);
+      result = await fn.apply(serviceCalller, params);
 
       if (!result.error) {
         return result;
       }
 
+      if (attempts === this.retries) {
+        break;
+      }
+
+      if (
+        this.retryStrategy.includes("switch") &&
+        type !== "custom" &&
+        this.possibleServices.length > 1
+      ) {
+        if (possibleServices.length === 0) {
+          const otherServices = this.possibleServices.filter(
+            (service) => service !== originalService.name,
+          );
+          possibleServices = [originalService.name, ...otherServices];
+        }
+        const nextService = possibleServices.shift() as TService;
+        this.setActiveService(nextService);
+        this.logger({ name: "switch" }).info(
+          `switched to ${nextService} service for retry`,
+        );
+      }
+      attempts++;
       this.logger({ name: "retrying..." }).warning(
         `attempt ${attempts} of ${this.retries}`,
       );
-      if (this.retryStrategy === "switch" && type !== "custom") {
-        const remainingServices = this.possibleServices.filter(
-          (service) => service !== this.activeService.name,
-        );
-        if (remainingServices.length > 0) {
-          const nextService = remainingServices[0];
-          this.setActiveService(remainingServices[0]);
-          this.logger({ name: nextService }).info(
-            `Switched to ${nextService} service for retry`,
-          );
-        } else {
-          this.setActiveService(this.possibleServices[0]);
-        }
-      }
-      attempts++;
     }
-    const serviceCalller = thisArg || this.activeService;
 
-    const fn = serviceCalller[fnName] as (
-      ...args: any[]
-    ) => Promise<DataOrError<T>>;
-    return await fn.apply(serviceCalller, params);
+    if (
+      this.retryStrategy === "switchTemp" &&
+      this.possibleServices.length > 1
+    ) {
+      this.activeService = originalService;
+      this.logger({ name: "switch temp" }).info(
+        `reverted back to ${originalService.name}`,
+      );
+    }
+    return result;
   }
 
   private async withCache<T extends CacheKeys>(

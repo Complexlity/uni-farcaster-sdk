@@ -93,4 +93,4 @@ export type Config = (
     retryStrategy?: RetryStrategy;
   };
 
-export type RetryStrategy = "normal" | "switch";
+export type RetryStrategy = "normal" | "switch" | "switchTemp";
