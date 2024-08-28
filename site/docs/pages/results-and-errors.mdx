@@ -1,0 +1,99 @@
+# Results and Error Handling
+
+Every query returns an object of the format
+
+```ts
+//Successfull Query
+type Result<ReturnedType> = {
+  data: ReturnedType;
+  error: null;
+};
+
+//Failed Query
+type Result = {
+  data: null;
+  error: {
+    message: string;
+  };
+};
+```
+
+## USER
+
+```ts
+type User = {
+  fid: number;
+  ethAddresses: string[];
+  solAddresses: string[];
+  username: string;
+  displayName: string;
+  bio: string;
+  pfpUrl: string;
+  followerCount: number;
+  followingCount: number;
+  powerBadge?: boolean;
+  viewerContext: {
+    following: boolean;
+    followedBy: boolean;
+  };
+};
+```
+
+Queries: `getUserByFid` and `getUserByUsername`
+returns `Result<User>`.
+
+:::danger
+When using airstack service, `getUserByUsername` does not return viewerContext so use `getUserByFid` whenever you can
+:::
+
+## CAST
+
+```ts
+type Cast = {
+  //Viewer context does not always exist
+  author: UserWithOptionalViewerContext;
+  hash: string;
+  url: string;
+  userReactions: {
+    likes: number;
+    recasts: number;
+  };
+  viewerContext: {
+    liked: boolean;
+    recasted: boolean;
+  };
+  text: string;
+  embeds: unknown[];
+  channel: string | null;
+};
+```
+
+Queries `getCastByHash` and `getCastByUrl` returns `Result<Cast>`
+
+## Custom Queries
+
+`sdk.neynar` and `sdk.airstack` return `Result<unknown>` since the returned value is not predicatable.
+
+However, you can type the returned value yourself
+
+```ts
+type MyCustomReturnType = {
+  name: string;
+  id: string;
+  value: number;
+};
+const { data, error } = await sdkInstance.neynar<MyCustomReturnType>(
+  endpoint,
+  queryParams
+);
+const { data, error } = await sdkInstance.airstack<MyCustomReturnType>(
+  endpoint,
+  queryParams
+);
+
+// Now, you get type completion as though typescript knows what the returned value is
+```
+
+:::danger
+Be careful when typing yourself as you could 'lie' to the compiler in this way
+:::

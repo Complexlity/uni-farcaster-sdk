@@ -1,0 +1,165 @@
+# Configuration Options
+
+```ts
+type configurationOptions = {
+	neynarApiKey?: string,
+	airstackApiKey?: string,
+	activeService?: 'airstack' | 'neynar',
+	debug?: boolean,
+	logLevel: "info" | "warning" | "error" | "success",
+	cacheTtl: number,
+	retries? number,
+	retryStrategy: "normal" | "switch" | "switchTemp"
+}
+
+const sdkInstanceInstance = new uniFarcasterSdk(configurationOptions)
+```
+
+`configurationOptions` is an object that takes the properties below
+
+## Neynar Api Key
+
+```ts
+const sdkInstanceInstance = new uniFarcasterSdk({
+  neynarApiKey: "NEYNAR_API_DOCS",
+});
+```
+
+You'd need to get your api key from [neynar](https://neynar.com/)
+
+:::info
+`NEYNAR_API_DOCS` is a valid api key which is provided by neynar for testing purposes.
+You can use it to test the sdk but you should not use it in production
+:::
+
+## Airstack Api Key
+
+```ts
+const sdkInstanceInstance = new uniFarcasterSdk({
+  airstackApiKey: "your-airstack-api-key",
+});
+```
+
+You'd need to get your api key from [airstack](https://airstack.xyz/)
+
+:::danger
+`your-airstack-api-key` is NOT a valid airstack api key. You'd need to sign up on airstack to get one
+:::
+
+## Active Service
+
+```ts
+const sdkInstance = new uniFarcasterSdk({
+  activeService: "airstack",
+});
+```
+
+You can specify which of the services you want to use.<br></br> By default, it will set the active service depending on which of the api keys you provide.<br></br>This option is especially useful when you have both api keys
+provided.
+
+:::info
+Without the active service (when both api keys are provided), it randomly chooses one of them.
+:::
+
+## Cache Time To Live
+
+```ts
+const sdkInstance = new uniFarcasterSdk({
+  cacheTtl: 60 * 60 * 1000, // 1 hour
+});
+```
+
+By default, all queries are cached for 1 hour before they expire and would hit the external services again.
+You can configure how long you want them to be cached for in milliseconds.
+
+## Retries
+
+```ts
+const sdkInstance = new uniFarcasterSdk({
+  retries: 0,
+});
+```
+
+By default on error, it returns the error and does not retry the query.
+You can configure how many times you want to retry the query before returning the error.
+
+## Retry Strategy
+
+```ts
+const sdkInstance = new uniFarcasterSdk({
+  retryStrategy: "switch",
+});
+```
+
+Retry Strategy determines how you want to retry the query. There's 3 modes:
+
+### normal
+
+This is the default and it simply retries the query for the number of `retries` you have in your config using the same service as the initial request.
+
+### switch
+
+In this strategy, it changes the active service each time it retries.
+This only works when you have both airstack and neynar api keys configured.
+
+### switchTemp
+
+This strategy works the same as `switch` but the difference is after all retries are completed (or successful), it switches back to the original service.
+
+## Debug
+
+When set to true, it would log all queries on the console. One way to use this is using the environment variable `NODE_ENV=development`
+
+```ts
+const debugMode = process.env.NODE_ENV === "development";
+const sdkInstance = new uniFarcasterSdk({
+  debug: debugMode,
+});
+```
+
+## Log Level
+
+In debug mode, this restricts what type of queries are logged to the console.
+By default, it logs all queries.
+This configuration only has an effect when `debug` is set to true
+
+```ts
+const sdkInstance = new uniFarcasterSdk({
+  logLevel: "info",
+  //Only logs of level "info" would show up on the console
+});
+```
+
+You can choose from `info`, `warning`, `error` and `success`
+
+## Example Instance
+
+```ts
+const sdkInstance = uniFarcasterSdk({
+  neynarApiKey: "NEYNAR_API_DOCS",
+  airstackApiKey: "your-airstack-api-key",
+  activeService: "neynar",
+  cacheTtl: 60 * 1 * 1000, // 1 Minute
+  retries: 3,
+  retryStrategy: "switchTemp",
+  debug: true,
+  logLevel: "success",
+});
+```
+
+## Reference
+
+| Property         | Type                                                | Required                       | Description                                                                                          |
+| ---------------- | --------------------------------------------------- | ------------------------------ | ---------------------------------------------------------------------------------------------------- |
+| `neynarApiKey`   | `string`                                            | optional                       | Api key from [neynar](https://neynar.com/)                                                           |
+| `airstackApiKey` | `string`                                            | optional                       | Api key from [airstack](https://airstack.xyz/)                                                       |
+| `activeService`  | `'airstack'` \| `'neynar'`                          | optional                       | The active service to use. Only has effect if both `neynarApiKey` and `airstackApiKey` are provided. |
+| `debug`          | `boolean`                                           | optional. Default: `false`     | Logs queries, cache and retry information when set to true                                           |
+| `logLevel`       | `'info'` \| `'warning'` \| `'error'` \| `'success'` | optional. Default: `undefined` | The log level to use. Only has effect when `debug` is set to true                                    |
+| `cacheTtl`       | `number`                                            | optional. Defaults: `1 hour`   | The amount of time in milliseconds before invalidating a query                                       |
+| `retries`        | `number`                                            | optional. Default: `0`         | The number of retries to do before returning the error.                                              |
+| `retryStrategy`  | `'normal'` \| `'switch'` \| `'switchTemp'`          | optional. Default: `normal`    | The retry strategy to use.                                                                           |
+
+:::warning
+One of `neynarApiKey` or `airstackApiKey` MUST be provided
+:::
