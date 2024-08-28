@@ -1,0 +1,55 @@
+# Get started
+
+## Overview
+
+Unifarcaster SDK is a type-safe library that helps you query the farcaster network easily.
+
+It's built on [Neynar](https://neynar.com/) and [Airstack](https://airstack.xyz/). And has additional features you would need in your own app
+
+## Quick Start
+
+### Installation
+
+:::code-group
+
+```bash [pnpm]
+pnpm add uni-farcaster-sdk
+```
+
+```bash [npm]
+npm install uni-farcaster-sdk
+```
+
+```bash [yarn]
+yarn add uni-farcaster-sdk
+```
+
+```bash [bun]
+bun add uni-farcaster-sdk
+```
+
+:::
+
+### Usage
+
+```ts
+import uniFarcasterSdk from "uni-farcaster-sdk";
+
+//Initialize the sdk with either neynar api key or airstack api key
+const sdkInstance = new uniFarcasterSdk({
+  neynarApiKey: "NEYNAR_API_DOCS",
+  airstackApiKey: "your-airstack-api-key",
+});
+//NOTE: You only need one of them but you can also have both.
+
+//Start Querying the farcaster network
+const { data, error } = await sdkInstance.getUserByFid(213144, 11124);
+```
+
+## Features
+
+- **Type-safety**: Sdk is fully typed and you don't need to know about any of the external services to use it.
+- **Caching**: Queries are cached for better performance and could have cache time which could be configured as you want
+- **Retries**: You have the configuration to add retries to faile queries.<br></br> Furthermore, you could also configure what retry startegy to use. [Learn More](/configuration#retry-strategy)
+- **Debug Mode**: You could enable debug mode which log queries, cache and retries information to the console. Specifically useful for development.
+- **Custom Queries**: While the sdk offers some good queries, you could need more than it offers. The sdk offers custom queries which you can use to get different data depending on your requirement.

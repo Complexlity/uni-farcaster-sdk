@@ -1,0 +1,158 @@
+# API Reference
+
+```ts
+const sdkInstance = new uniFarcasterSdk({
+  ...configurationOptions,
+});
+```
+
+The `sdkInstance` contains the following methods
+
+## getActiveService
+
+Returns the current active service
+
+```ts
+const activeService = sdkInstance.getActiveService();
+console.log(activeService); // 'airstack' | 'neynar'
+```
+
+## setActiveService
+
+Sets the active service. Takes either `neynar` or `airstack`
+
+```ts
+sdkInstance.setActiveService("neynar");
+```
+
+:::info
+If you didn't pass the needed api key for the active service, it doesn't throw an error but would ignore it
+:::
+
+## getUserByFid
+
+```ts
+const fid = 11124;
+const viewerFid = 3854; //Optional. Default: 213144;
+const { data: user, error } = await sdkInstance.getUserByFid(fid, viewerFid);
+```
+
+## getUserByUsername
+
+```ts
+const username = "ds8";
+const viewerFid = 3854; //Optional. Default: 213144;
+const { data: user, error } = await sdkInstance.getUserByUsername(
+  username,
+  viewerFid
+);
+```
+
+:::danger
+This method does not return `viewerContext` when using `airstack` service, so use `getUserByFid` whenever you can
+:::
+
+## getCastByHash
+
+Returns the cast by its hash
+
+```ts
+const castHash = "0xaa06a360e5f27a323e2c9f22ea240f724dc36aba";
+const viewerFid = 3854; //Optional. Default: 213144;
+const { data: cast, error } = await sdkInstance.getCastByHash(
+  castHash,
+  viewerFid
+);
+```
+
+## getCastByUrl
+
+Returns the cast by its url
+
+```ts
+const castUrl = "https://warpcast.com/complexlity/0xaa06a360";
+const viewerFid = 3854; //Optional. Default: 213144;
+const { data: cast, error } = await sdkInstance.getCastByUrl(
+  castUrl,
+  viewerFid
+);
+```
+
+## Custom Queries
+
+The above four methods are the most commonly needed from these services. However, there's a lot more you might need. So you can use either of these services directly
+
+### neynar
+
+#### Usage
+
+```ts
+const { data, error } = sdkInstance.neynar(endpoint, queryParams);
+```
+
+**endpoint**: Neynar Endpoint without the `https://api.neynar.com` prefix
+**queryParams**: Query parameters
+
+URL FORMAT: `https://api.neynar.com/${endpoint}?${queryParams}`
+
+#### Example
+
+Query: Get allocations for a user
+Neynar Url: https://api.neynar.com/v2/farcaster/storage/allocations
+
+```ts
+const fullNeynarQuery =
+  "https://api.neynar.com/v2/farcaster/storage/allocations?fid=213144";
+
+const endpoint = "/v2/farcaster/storage/allocations";
+const fid = 213144;
+const { data, error } = await sdkInstance.neynar(url, { fid: userFid });
+```
+
+Returns the allocations for user fid `213144`
+
+:::info
+You can find this query example from the [Neynar Docs](https://docs.neynar.com/reference/storage-allocations)
+:::
+
+### Airstack
+
+#### Usage
+
+```ts
+const { data, error } = sdkInstance.airstack(graphqlQuery, variables);
+```
+
+**graphqlQuery**: Airstack GraphQL Query
+**variables**: Variables for the query
+
+#### Example
+
+Query: Get the number of followers of the `airstack` channel
+
+```ts
+const graphqlQuery = `
+    query MyQuery($input: FarcasterChannelsInput!) {
+      FarcasterChannels(input: $input) {
+        FarcasterChannel {
+          channelId
+          followerCount
+        }
+      }
+    }
+  `;
+
+const variables = {
+  input: {
+    blockchain: "ALL",
+    limit: 1,
+    filter: {
+      channelId: {
+        _eq: "airstack",
+      },
+    },
+  },
+};
+
+const { data, error } = await sdkInstance.airstack(graphqlQuery, variables);
+```
