@@ -162,6 +162,17 @@ class uniFarcasterSdk implements Omit<Service, "name" | "customQuery"> {
       result = await fn.apply(serviceCalller, params);
 
       if (!result.error) {
+        //Also revert to the initial service if we are using switchTemp
+        if (
+          this.retryStrategy === "switchTemp" &&
+          this.possibleServices.length > 1
+        ) {
+          this.activeService = originalService;
+          this.logger({ name: "switch" }).info(
+            `reverted back to ${originalService.name}`,
+          );
+        }
+
         return result;
       }
 
