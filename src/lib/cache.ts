@@ -1,7 +1,7 @@
 import { DEFAULTS } from "./constants";
 import type { Cast, User, UserWithOptionalViewerContext } from "./types";
 
-export type StringOrNumberArray = unknown[];
+export type UnknownArray = unknown[];
 
 type MapData<T> = {
   data: T;
@@ -35,12 +35,12 @@ export class Cache {
     return null;
   }
 
-  private getUserCachedData(params: StringOrNumberArray) {
+  private getUserCachedData(params: UnknownArray) {
     const cacheKey = `${["user", ...params].join(":")}`;
     return this.getData<User | UserWithOptionalViewerContext>(cacheKey);
   }
 
-  private getCastCachedData(params: StringOrNumberArray) {
+  private getCastCachedData(params: UnknownArray) {
     const cacheKey = `${["cast", ...params].join(":")}`;
 
     return this.getData<Cast>(cacheKey) as Cast | null;
@@ -50,7 +50,7 @@ export class Cache {
     const cacheKey = `${["custom", ...params].join(":")}`;
     return this.getData<unknown>(cacheKey) as unknown | null;
   }
-  private setUserCachedData(data: User, params: StringOrNumberArray) {
+  private setUserCachedData(data: User, params: UnknownArray) {
     const fidKey = `${["user", data.fid, ...params].join(":")}`;
     const usernameKey = `${["user", data.username, ...params].join(":")}`;
     const setData = { data, timestamp: Date.now() };
@@ -58,7 +58,7 @@ export class Cache {
     this.cache.set(usernameKey, setData);
     return data;
   }
-  private setCastCachedData(data: Cast, params: StringOrNumberArray): Cast {
+  private setCastCachedData(data: Cast, params: UnknownArray): Cast {
     const hashKey = `${["cast", data.hash, ...params].join(":")}`;
     const urlKey = `${["cast", data.url, ...params].join(":")}`;
     const setData = { data, timestamp: Date.now() };
@@ -74,7 +74,7 @@ export class Cache {
     return data;
   }
 
-  public get<T extends CacheKeys>(type: T, params: StringOrNumberArray) {
+  public get<T extends CacheKeys>(type: T, params: UnknownArray) {
     if (type === "user") {
       return this.getUserCachedData(params) as T extends "user"
         ? User | UserWithOptionalViewerContext | null
@@ -98,7 +98,7 @@ export class Cache {
   public set<T extends CacheKeys>(
     type: T,
     data: CacheTypes[T],
-    params: StringOrNumberArray,
+    params: UnknownArray,
   ): User | Cast | unknown {
     if (type === "user") {
       return this.setUserCachedData(data as User, params);
