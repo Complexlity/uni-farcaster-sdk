@@ -1,6 +1,9 @@
+For more comprehensive documentation, please visit the full docs - [https://uni-farcaster-sdk.vercel.app/](https://uni-farcaster-sdk.vercel.app/)
+
 # UniFarcaster SDK
 
 This is an SDK that combines neynar, airstack to provide a single API without needing to know the underlying apis of both.
+
 ## Installation
 
 ```bash
@@ -74,9 +77,8 @@ await sdkInstance.getCastByHash(castHash, viewerFid)
 > [!IMPORTANT]
 > Getting by username doesn't return viewer context when using airstack instance so use getUserByFid when you always need viewerContext.
 
-
-
 ## Return Types
+
 ```ts
 type User = {
   fid: number;
@@ -123,13 +125,15 @@ or
 //With Error
 { data: null, error: {message: string}}
 ```
+
 Check if error is not null to knowif there was an error and handle it accordingly.
 
 ## TODO
+
 - Add debug mode to log all queries ✅
 - Add query caching to avoid hitting the service for the same query ✅
 - Add airstack custom support. Where you can pass in custom airstack graphql queries if you need more than the sdk offers ✅
 - Add neynar custom support where you can pass custom neynar rest endpoints if you need more than the sdk offers ✅
 - Add an optional `retry` config to all queries and the option to switch service if there's an error
-i.e If the current active service is airstack and the query fails, it will try to use neynar`
-✅
+  i.e If the current active service is airstack and the query fails, it will try to use neynar`
+  ✅
