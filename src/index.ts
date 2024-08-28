@@ -158,7 +158,7 @@ class uniFarcasterSdk implements Omit<Service, "name" | "customQuery"> {
 
       const fn = serviceCalller[fnName] as (
         ...args: any[]
-      ) => Promise<DataOrError<T>>;
+      ) => Promise<DataOrError<CacheTypes[T]>>;
       result = await fn.apply(serviceCalller, params);
 
       if (!result.error) {
@@ -217,7 +217,6 @@ class uniFarcasterSdk implements Omit<Service, "name" | "customQuery"> {
 
   private async withCache<T extends CacheKeys>(
     type: T,
-    // fn: (...args: any[]) => Promise<DataOrError<CacheTypes[T]>>,
     fn: keyof Service,
     params: unknown[],
     thisArg?: Service,
@@ -281,30 +280,33 @@ class uniFarcasterSdk implements Omit<Service, "name" | "customQuery"> {
     this.activeService = this.createService(service);
   }
 
-  public async airstack(
+  public async airstack<R = unknown>(
     query: string,
     variables: Record<string, unknown> = {},
   ) {
     if (!this.airstackApiKey) throw new Error("No airstack api key provided");
     const airstackService = new services.airstack(this.airstackApiKey);
-    return await this.withCache(
+    return (await this.withCache(
       "custom",
       "customQuery",
       [query, variables],
       airstackService,
-    );
+    )) as DataOrError<R>;
   }
 
-  public async neynar(endpoint: string, params: Record<string, unknown> = {}) {
+  public async neynar<R = unknown>(
+    endpoint: string,
+    params: Record<string, unknown> = {},
+  ) {
     if (!this.neynarApiKey) throw new Error("No neynar api key provided");
     const neynarService = new services.neynar(this.neynarApiKey);
 
-    return await this.withCache(
+    return (await this.withCache(
       "custom",
       "customQuery",
       [endpoint, params],
       neynarService,
-    );
+    )) as DataOrError<R>;
   }
 
   public async getUserByFid(fid: number, viewerFid: number = DEFAULTS.fid) {

@@ -122,6 +122,6 @@ type CacheConfig = {
 export type CacheTypes = {
   user: User | UserWithOptionalViewerContext;
   cast: Cast;
-  custom: any;
+  custom: unknown;
 };
 export type CacheKeys = keyof CacheTypes;
