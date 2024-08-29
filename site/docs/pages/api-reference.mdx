@@ -105,8 +105,9 @@ const fullNeynarQuery =
   "https://api.neynar.com/v2/farcaster/storage/allocations?fid=213144";
 
 const endpoint = "/v2/farcaster/storage/allocations";
+const queryParams = { fid: 213144 };
 const fid = 213144;
-const { data, error } = await sdkInstance.neynar(url, { fid: userFid });
+const { data, error } = await sdkInstance.neynar(endpoint, queryParams);
 ```
 
 Returns the allocations for user fid `213144`
