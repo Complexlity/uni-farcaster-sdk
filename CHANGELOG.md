@@ -1,5 +1,11 @@
 # uni-farcaster-sdk
 
+## 0.0.17
+
+### Patch Changes
+
+- 89c9e24: fix: exports field in package.json
+
 ## 0.0.16
 
 ### Patch Changes
