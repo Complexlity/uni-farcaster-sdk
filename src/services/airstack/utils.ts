@@ -33,33 +33,39 @@ const castReturnedQuery = `
       }
 	`;
 
-export const userByFidQuery = (fid: number, viewerFid: number) => `query MyQuery {
-  Socials(input: {filter: {userId: {_eq: "${fid}"}}, blockchain: ethereum}) {
-    Social {
-      ${socialReturnedQuery}
-    }
-  }
-  Following: SocialFollowings(
-    input: {filter: {dappName: {_eq: farcaster}, followingProfileId: {_eq: "${fid}"}, followerProfileId: {_eq: "${viewerFid}"}}, blockchain: ALL}
-  ) {
-    Following {
-      followerProfileId
-    }
-  }
-  Followedby: SocialFollowings(
-    input: {filter: {dappName: {_eq: farcaster}, followingProfileId: {_eq: "${viewerFid}"}, followerProfileId: {_eq: "${fid}"}}, blockchain: ALL}
-  ) {
-    Following {
-      followerProfileId
-    }
-  }
-}`;
+export const usersByFidQuery = (fids: number[], viewerFid: number) => {
+  const fidsString = fids.map((fid) => `"${fid}"`).join(",");
+  return `query MyQuery {
+    Socials(input: {filter: {dappName: {_eq: farcaster}, userId: {_in: [${fidsString}]}}, blockchain: ethereum}) {
+      Social {
+        ${socialReturnedQuery}
+        }
+        }
+        Following: SocialFollowings(
+          input: {filter: {dappName: {_eq: farcaster}, followingProfileId: {_in: [${fidsString}]}, followerProfileId: {_eq: "${viewerFid}"}}, blockchain: ALL}
+          ) {
+            Following {
+              followingProfileId
+              followerProfileId
+              }
+              }
+              Followedby: SocialFollowings(
+                input: {filter: {dappName: {_eq: farcaster}, followingProfileId: {_eq: "${viewerFid}"}, followerProfileId: {_in: [${fidsString}]}}, blockchain: ALL}
+                ) {
+                  Following {
+                    followingProfileId
+                    followerProfileId
+                    }
+                    }
+                    }
+                    `;
+};
 
 export const userByUsernameQuery = (username: string) =>
   `query MyQuery {
-  Socials(
-    input: {filter: {profileName: {_eq: "${username}"}}, blockchain: ethereum}
-  ) {
+                    Socials(
+                      input: {filter: {profileName: {_eq: "${username}"}}, blockchain: ethereum}
+                      ) {
     Social {
       ${socialReturnedQuery}
     }
@@ -128,7 +134,7 @@ export const castByUrlQuery = (castUrl: string, viewerFid: number) =>
 export async function _fetch<ResponseType>(
   authKey: string,
   query: string,
-  variables: Record<string, unknown>,
+  variables: Record<string, unknown>
 ): Promise<DataOrError<ResponseType>> {
   try {
     const response = await axios({
@@ -165,7 +171,7 @@ export async function _fetch<ResponseType>(
 export async function fetchGql<ResponseType>(
   authKey: string,
   query: string,
-  variables: Record<string, unknown>,
+  variables: Record<string, unknown>
 ) {
   return _fetch<ResponseType>(authKey, query, variables);
 }
@@ -173,7 +179,7 @@ export async function fetchGql<ResponseType>(
 export async function fetchQuery<T>(
   authKey: string,
   query: string,
-  variables = {},
+  variables = {}
 ): Promise<DataOrError<T>> {
   const { data, error } = await fetchGql<T>(authKey, query, variables);
 

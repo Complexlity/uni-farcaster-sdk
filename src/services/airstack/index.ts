@@ -5,7 +5,7 @@ import {
   castByHashQuery,
   castByUrlQuery,
   fetchQuery,
-  userByFidQuery,
+  usersByFidQuery,
   userByUsernameQuery,
 } from "./utils";
 
@@ -16,13 +16,13 @@ export class airstackService implements Service {
     this.apiKey = apiKey;
     if (!apiKey) {
       throw new Error(
-        "Attempt to use an airstack API without first providing an api key",
+        "Attempt to use an airstack API without first providing an api key"
       );
     }
   }
 
   private getUserFromAirstackSociaslResult(
-    userDetails: AirstackUserQueryResult["Socials"]["Social"][0],
+    userDetails: AirstackUserQueryResult["Socials"]["Social"][0]
   ) {
     const userAddresses = this.getUserAddresses(userDetails.connectedAddresses);
     const convertedUser = {
@@ -41,7 +41,7 @@ export class airstackService implements Service {
   }
 
   private getUserAddresses(
-    userAddresses: { address: string; blockchain: string }[],
+    userAddresses: { address: string; blockchain: string }[]
   ) {
     const ethAddresses: string[] = [];
     const solAddresses: string[] = [];
@@ -61,7 +61,7 @@ export class airstackService implements Service {
       hash: castResult.FarcasterCasts.Cast[0]?.hash,
       url: castResult.FarcasterCasts.Cast[0]?.url,
       author: this.getUserFromAirstackSociaslResult(
-        castResult.FarcasterCasts.Cast[0]?.castedBy,
+        castResult.FarcasterCasts.Cast[0]?.castedBy
       ),
       userReactions: {
         likes: castResult.FarcasterCasts.Cast[0]?.numberOfLikes,
@@ -78,32 +78,50 @@ export class airstackService implements Service {
     return convertedCast;
   }
 
-  async getUserByFid(
-    fid: number,
-    viewerFid: number,
-  ): Promise<DataOrError<User>> {
-    const query = userByFidQuery(fid, viewerFid);
+  async getUsersByFid(
+    fids: number[],
+    viewerFid: number
+  ): Promise<DataOrError<User[]>> {
+    const query = usersByFidQuery(fids, viewerFid);
     const { data, error } = await fetchQuery<AirstackUserQueryResult>(
       this.apiKey,
-      query,
+      query
     );
     if (error) {
       return { data, error };
     }
     const returnedData = data;
-    const user = this.getUserFromAirstackSociaslResult(
-      returnedData.Socials.Social[0],
-    );
-    const viewerContext = {
-      following: !!returnedData.Following.Following,
-      followedBy: !!returnedData.Followedby.Following,
-    };
-    return { data: { ...user, viewerContext }, error: null };
+    const users = returnedData.Socials.Social.map((user) => {
+      const tempUser = this.getUserFromAirstackSociaslResult(user);
+      const isFollowing = returnedData.Following.Following?.find(
+        (following) => following.followingProfileId === tempUser.fid.toString()
+      );
+
+      const isFollowedBy = returnedData.Followedby.Following?.find(
+        (following) => following.followerProfileId === tempUser.fid.toString()
+      );
+      return {
+        ...tempUser,
+        viewerContext: {
+          following: !!isFollowing,
+          followedBy: !!isFollowedBy,
+        },
+      };
+    });
+    // const user = this.getUserFromAirstackSociaslResult(
+    //   returnedData.Socials.Social[0]
+    // );
+    // const viewerContext = {
+    //   following: !!returnedData.Following.Following,
+    //   followedBy: !!returnedData.Followedby.Following,
+    // };
+    // return { data: { ...user, viewerContext }, error: null };
+    return { data: users, error: null };
   }
 
   async getUserByUsername(
     username: string,
-    _viewerFid: number,
+    _viewerFid: number
   ): Promise<DataOrError<Omit<User, "viewerContext">>> {
     const query = userByUsernameQuery(username);
     const { data, error } = await fetchQuery<
@@ -115,7 +133,7 @@ export class airstackService implements Service {
     const returnedData = data;
     return {
       data: this.getUserFromAirstackSociaslResult(
-        returnedData.Socials.Social[0],
+        returnedData.Socials.Social[0]
       ),
       error: null,
     };
@@ -123,12 +141,12 @@ export class airstackService implements Service {
 
   async getCastByHash(
     hash: string,
-    viewerFid: number,
+    viewerFid: number
   ): Promise<DataOrError<Cast>> {
     const query = castByHashQuery(hash, viewerFid);
     const { data, error } = await fetchQuery<AirstackCastQueryResult>(
       this.apiKey,
-      query,
+      query
     );
     if (error) {
       return { data, error };
@@ -139,12 +157,12 @@ export class airstackService implements Service {
 
   async getCastByUrl(
     url: string,
-    viewerFid: number,
+    viewerFid: number
   ): Promise<DataOrError<Cast>> {
     const query = castByUrlQuery(url, viewerFid);
     const { data, error } = await fetchQuery<AirstackCastQueryResult>(
       this.apiKey,
-      query,
+      query
     );
     if (error) {
       return { data, error };
