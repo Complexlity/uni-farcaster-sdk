@@ -1,5 +1,11 @@
 # uni-farcaster-sdk
 
+## 0.0.18
+
+### Patch Changes
+
+- f539fe3: Feat: multiple fids in a single query, improve perf
+
 ## 0.0.17
 
 ### Patch Changes
