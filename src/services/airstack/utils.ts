@@ -33,33 +33,39 @@ const castReturnedQuery = `
       }
 	`;
 
-export const userByFidQuery = (fid: number, viewerFid: number) => `query MyQuery {
-  Socials(input: {filter: {userId: {_eq: "${fid}"}}, blockchain: ethereum}) {
-    Social {
-      ${socialReturnedQuery}
-    }
-  }
-  Following: SocialFollowings(
-    input: {filter: {dappName: {_eq: farcaster}, followingProfileId: {_eq: "${fid}"}, followerProfileId: {_eq: "${viewerFid}"}}, blockchain: ALL}
-  ) {
-    Following {
-      followerProfileId
-    }
-  }
-  Followedby: SocialFollowings(
-    input: {filter: {dappName: {_eq: farcaster}, followingProfileId: {_eq: "${viewerFid}"}, followerProfileId: {_eq: "${fid}"}}, blockchain: ALL}
-  ) {
-    Following {
-      followerProfileId
-    }
-  }
-}`;
+export const usersByFidQuery = (fids: number[], viewerFid: number) => {
+  const fidsString = fids.map((fid) => `"${fid}"`).join(",");
+  return `query MyQuery {
+    Socials(input: {filter: {dappName: {_eq: farcaster}, userId: {_in: [${fidsString}]}}, blockchain: ethereum}) {
+      Social {
+        ${socialReturnedQuery}
+        }
+        }
+        Following: SocialFollowings(
+          input: {filter: {dappName: {_eq: farcaster}, followingProfileId: {_in: [${fidsString}]}, followerProfileId: {_eq: "${viewerFid}"}}, blockchain: ALL}
+          ) {
+            Following {
+              followingProfileId
+              followerProfileId
+              }
+              }
+              Followedby: SocialFollowings(
+                input: {filter: {dappName: {_eq: farcaster}, followingProfileId: {_eq: "${viewerFid}"}, followerProfileId: {_in: [${fidsString}]}}, blockchain: ALL}
+                ) {
+                  Following {
+                    followingProfileId
+                    followerProfileId
+                    }
+                    }
+                    }
+                    `;
+};
 
 export const userByUsernameQuery = (username: string) =>
   `query MyQuery {
-  Socials(
-    input: {filter: {profileName: {_eq: "${username}"}}, blockchain: ethereum}
-  ) {
+                    Socials(
+                      input: {filter: {profileName: {_eq: "${username}"}}, blockchain: ethereum}
+                      ) {
     Social {
       ${socialReturnedQuery}
     }

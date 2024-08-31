@@ -53,7 +53,10 @@ export type UserWithOptionalViewerContext = Prettify<
 
 export interface Service {
   name: TService;
-  getUserByFid(fid: number, viewerFid?: number): Promise<DataOrError<User>>;
+  getUsersByFid(
+    fids: number[],
+    viewerFid?: number,
+  ): Promise<DataOrError<User[]>>;
   getUserByUsername(
     username: string,
     viewerFid?: number,

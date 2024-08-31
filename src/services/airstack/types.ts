@@ -14,7 +14,12 @@ export interface AirstackUserQueryResult {
 }
 
 export interface Follow {
-  Following: unknown;
+  Following:
+    | {
+        followingProfileId: string;
+        followerProfileId: string;
+      }[]
+    | null;
 }
 
 export interface Socials {

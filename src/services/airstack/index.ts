@@ -5,8 +5,8 @@ import {
   castByHashQuery,
   castByUrlQuery,
   fetchQuery,
-  userByFidQuery,
   userByUsernameQuery,
+  usersByFidQuery,
 } from "./utils";
 
 export class airstackService implements Service {
@@ -78,11 +78,11 @@ export class airstackService implements Service {
     return convertedCast;
   }
 
-  async getUserByFid(
-    fid: number,
+  async getUsersByFid(
+    fids: number[],
     viewerFid: number,
-  ): Promise<DataOrError<User>> {
-    const query = userByFidQuery(fid, viewerFid);
+  ): Promise<DataOrError<User[]>> {
+    const query = usersByFidQuery(fids, viewerFid);
     const { data, error } = await fetchQuery<AirstackUserQueryResult>(
       this.apiKey,
       query,
@@ -91,14 +91,26 @@ export class airstackService implements Service {
       return { data, error };
     }
     const returnedData = data;
-    const user = this.getUserFromAirstackSociaslResult(
-      returnedData.Socials.Social[0],
-    );
-    const viewerContext = {
-      following: !!returnedData.Following.Following,
-      followedBy: !!returnedData.Followedby.Following,
-    };
-    return { data: { ...user, viewerContext }, error: null };
+
+    const users = returnedData.Socials.Social.map((user) => {
+      const tempUser = this.getUserFromAirstackSociaslResult(user);
+      const isFollowing = returnedData.Following.Following?.find(
+        (following) => following.followingProfileId === tempUser.fid.toString(),
+      );
+
+      const isFollowedBy = returnedData.Followedby.Following?.find(
+        (following) => following.followerProfileId === tempUser.fid.toString(),
+      );
+      return {
+        ...tempUser,
+        viewerContext: {
+          following: !!isFollowing,
+          followedBy: !!isFollowedBy,
+        },
+      };
+    });
+
+    return { data: users, error: null };
   }
 
   async getUserByUsername(

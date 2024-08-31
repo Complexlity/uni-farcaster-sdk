@@ -82,7 +82,7 @@ class uniFarcasterSdk implements Omit<Service, "name" | "customQuery"> {
                     result = originalMethod.apply(target, args);
                   }
 
-                  if (result.error) {
+                  if (result && result.error) {
                     const loggedService = customMethods.includes(propKey)
                       ? { name: `custom` }
                       : target.activeService;
@@ -309,11 +309,11 @@ class uniFarcasterSdk implements Omit<Service, "name" | "customQuery"> {
     )) as DataOrError<R>;
   }
 
-  public async getUserByFid(fid: number, viewerFid: number = DEFAULTS.fid) {
-    const res = (await this.withCache("user", "getUserByFid", [
-      fid,
+  public async getUsersByFid(fids: number[], viewerFid: number = DEFAULTS.fid) {
+    const res = (await this.withCache("user", "getUsersByFid", [
+      fids,
       viewerFid,
-    ])) as DataOrError<User>;
+    ])) as DataOrError<User[]>;
     return res;
   }
 

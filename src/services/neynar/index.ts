@@ -87,7 +87,7 @@ export class neynarService implements Service {
         following: user.viewer_context.following,
         followedBy: user.viewer_context.followed_by,
       },
-      ...(user.power_badge ? { powerBadge: user.power_badge } : {}),
+      ...("power_badge" in user ? { powerBadge: user.power_badge } : {}),
     };
   }
 
@@ -113,25 +113,27 @@ export class neynarService implements Service {
       channel: cast.channel ? cast.channel.name : null,
     };
   }
-  async getUserByFid(
-    fid: number,
+  async getUsersByFid(
+    fids: number[],
     viewerFid: number = DEFAULTS.fid,
-  ): Promise<DataOrError<User>> {
+  ): Promise<DataOrError<User[]>> {
     try {
       const usersInfo = await api.get<{ users: NeynarUser[] }>(
         NEYNAR_DEFAULTS.userByFidUrl,
         {
           params: {
-            fids: `${fid}`,
+            fids: `${fids.join(",")}`,
             viewer_fid: `${viewerFid}`,
           },
           headers: this.getHeaders(),
         },
       );
 
-      const [user] = usersInfo.data.users;
-      const returnedUser = this.getUserFromNeynarResponse(user);
-      return { data: returnedUser, error: null };
+      const users = usersInfo.data.users;
+      const returnedUsers = users.map((user) =>
+        this.getUserFromNeynarResponse(user),
+      );
+      return { data: returnedUsers, error: null };
     } catch (e) {
       return this.handleError(e);
     }

@@ -117,7 +117,7 @@ describe("main cache", () => {
   let sdk: uniFarcasterSdk;
   let mockService: {
     name: string;
-    getUserByFid: Mock;
+    getUsersByFid: Mock;
     getUserByUsername: Mock;
     getCastByHash: Mock;
     getCastByUrl: Mock;
@@ -126,7 +126,7 @@ describe("main cache", () => {
   beforeEach(() => {
     mockService = {
       name: "mockService",
-      getUserByFid: vi.fn(),
+      getUsersByFid: vi.fn(),
       getUserByUsername: vi.fn(),
       getCastByHash: vi.fn(),
       getCastByUrl: vi.fn(),
@@ -139,21 +139,21 @@ describe("main cache", () => {
     sdk.cache = new Cache();
   });
 
-  test("should use cache for getUserByFid", async () => {
-    mockService.getUserByFid.mockResolvedValueOnce({
+  test("should use cache for getUsersByFid", async () => {
+    mockService.getUsersByFid.mockResolvedValueOnce({
       data: mockUser,
       error: null,
     });
 
     // First call should hit the service
-    const result1 = await sdk.getUserByFid(mockUser.fid);
+    const result1 = await sdk.getUsersByFid([mockUser.fid]);
     expect(result1.data).toEqual(mockUser);
-    expect(mockService.getUserByFid).toHaveBeenCalledTimes(1);
+    expect(mockService.getUsersByFid).toHaveBeenCalledTimes(1);
 
     // Second call should use cache
-    const result2 = await sdk.getUserByFid(mockUser.fid);
+    const result2 = await sdk.getUsersByFid([mockUser.fid]);
     expect(result2.data).toEqual(mockUser);
-    expect(mockService.getUserByFid).toHaveBeenCalledTimes(1); // Still 1, not 2
+    expect(mockService.getUsersByFid).toHaveBeenCalledTimes(1); // Still 1, not 2
 
     // Second call should use cache
     const result3 = await sdk.getUserByUsername(mockUser.username);
@@ -178,15 +178,15 @@ describe("main cache", () => {
     expect(mockService.getUserByUsername).toHaveBeenCalledTimes(1); // Still 1, not 2
 
     // Third call with fid should still use cache
-    const result3 = await sdk.getUserByFid(mockUser.fid);
+    const result3 = await sdk.getUsersByFid([mockUser.fid]);
     expect(result3.data).toEqual(mockUser);
-    expect(mockService.getUserByFid).not.toBeCalled();
+    expect(mockService.getUsersByFid).not.toBeCalled();
   });
 
   test("should use cache for getCastByHash", async () => {
     const mockCast = {
       hash: DUMMY_CAST_HASH,
-      url: "https://example.com/cast/mockUser.fid",
+      url: "https://example.com/cast/[mockUser.fid]",
     };
     mockService.getCastByHash.mockResolvedValueOnce({
       data: mockCast,
@@ -211,7 +211,7 @@ describe("main cache", () => {
 
   test("should use cache for getCastByUrl", async () => {
     const mockCast = {
-      url: "https://example.com/cast/mockUser.fid",
+      url: "https://example.com/cast/[mockUser.fid]",
       hash: DUMMY_CAST_HASH,
     };
     mockService.getCastByUrl.mockResolvedValueOnce({
@@ -239,13 +239,13 @@ describe("main cache", () => {
 describe("uniFarcasterSdk Cache with cacheTtl", () => {
   let mockService: {
     name: string;
-    getUserByFid: Mock;
+    getUsersByFid: Mock;
   };
 
   beforeEach(() => {
     mockService = {
       name: "mockService",
-      getUserByFid: vi.fn(),
+      getUsersByFid: vi.fn(),
     };
   });
 
@@ -257,15 +257,18 @@ describe("uniFarcasterSdk Cache with cacheTtl", () => {
     // @ts-expect-error Accessing private property for testing
     sdk.activeService = mockService;
 
-    mockService.getUserByFid.mockResolvedValue({ data: mockUser, error: null });
+    mockService.getUsersByFid.mockResolvedValue({
+      data: mockUser,
+      error: null,
+    });
 
     // First call should hit the service
-    await sdk.getUserByFid(mockUser.fid);
-    expect(mockService.getUserByFid).toHaveBeenCalledTimes(1);
+    await sdk.getUsersByFid([mockUser.fid]);
+    expect(mockService.getUsersByFid).toHaveBeenCalledTimes(1);
 
     // Second call should use cache
-    await sdk.getUserByFid(mockUser.fid);
-    expect(mockService.getUserByFid).toHaveBeenCalledTimes(1);
+    await sdk.getUsersByFid([mockUser.fid]);
+    expect(mockService.getUsersByFid).toHaveBeenCalledTimes(1);
   });
 
   test("should bypass cache when cacheTtl is 0", async () => {
@@ -273,15 +276,18 @@ describe("uniFarcasterSdk Cache with cacheTtl", () => {
     // @ts-expect-error Accessing private property for testing
     sdk.activeService = mockService;
 
-    mockService.getUserByFid.mockResolvedValue({ data: mockUser, error: null });
+    mockService.getUsersByFid.mockResolvedValue({
+      data: mockUser,
+      error: null,
+    });
 
     // First call should hit the service
-    await sdk.getUserByFid(mockUser.fid);
-    expect(mockService.getUserByFid).toHaveBeenCalledTimes(1);
+    await sdk.getUsersByFid([mockUser.fid]);
+    expect(mockService.getUsersByFid).toHaveBeenCalledTimes(1);
 
     // Second call should also hit the service, bypassing cache
-    await sdk.getUserByFid(mockUser.fid);
-    expect(mockService.getUserByFid).toHaveBeenCalledTimes(2);
+    await sdk.getUsersByFid([mockUser.fid]);
+    expect(mockService.getUsersByFid).toHaveBeenCalledTimes(2);
   });
 
   test("should expire cache after cacheTtl", async () => {
@@ -290,22 +296,25 @@ describe("uniFarcasterSdk Cache with cacheTtl", () => {
     // @ts-expect-error Accessing private property for testing
     sdk.activeService = mockService;
 
-    mockService.getUserByFid.mockResolvedValue({ data: mockUser, error: null });
+    mockService.getUsersByFid.mockResolvedValue({
+      data: mockUser,
+      error: null,
+    });
 
     // First call should hit the service
-    await sdk.getUserByFid(mockUser.fid);
-    expect(mockService.getUserByFid).toHaveBeenCalledTimes(1);
+    await sdk.getUsersByFid([mockUser.fid]);
+    expect(mockService.getUsersByFid).toHaveBeenCalledTimes(1);
 
     // Second call should use cache
-    await sdk.getUserByFid(mockUser.fid);
-    expect(mockService.getUserByFid).toHaveBeenCalledTimes(1); // Still 1, cache hit
+    await sdk.getUsersByFid([mockUser.fid]);
+    expect(mockService.getUsersByFid).toHaveBeenCalledTimes(1); // Still 1, cache hit
 
     // Wait for cache to expire
     await new Promise((resolve) => setTimeout(resolve, cacheTtl + 10)); // Wait just a bit longer than TTL
 
     // Third call should hit the service again
-    await sdk.getUserByFid(mockUser.fid);
-    expect(mockService.getUserByFid).toHaveBeenCalledTimes(2);
+    await sdk.getUsersByFid([mockUser.fid]);
+    expect(mockService.getUsersByFid).toHaveBeenCalledTimes(2);
   });
 });
 

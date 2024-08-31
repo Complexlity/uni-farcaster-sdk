@@ -24,10 +24,10 @@ export class hubService implements Service {
     });
   }
 
-  async getUserByFid(
-    _fid: number,
+  async getUsersByFid(
+    _fid: number[],
     _viewerFid: number,
-  ): Promise<DataOrError<User>> {
+  ): Promise<DataOrError<User[]>> {
     return this.genericError();
   }
   async getUserByUsername(_username: string, _viewerFid: number) {
