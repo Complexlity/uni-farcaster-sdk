@@ -57,9 +57,9 @@ sdkInstance.setActiveService('neynar')
 sdkInstance.getActiveService() //neynar
 
 //Get User By Fid
-const userFid = 3
+const userFid = [3]
 const viewerFid = 4
-await sdkInstance.getUserByFid(3, 4)
+await sdkInstance.getUsersByFid(userFid, viewerFid)
 //Viewer Fid is optional and defaults to 213144
 
 //Get User By Username
@@ -137,4 +137,4 @@ Check if error is not null to knowif there was an error and handle it accordingl
 - Add an optional `retry` config to all queries and the option to switch service if there's an error
   i.e If the current active service is airstack and the query fails, it will try to use neynar`
   ✅
-- Fetch multiple users in a single query
+- Fetch multiple users in a single query ✅
