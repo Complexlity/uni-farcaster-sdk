@@ -28,7 +28,7 @@ describe("airstackService", () => {
     vi.clearAllMocks();
   });
 
-  describe("getUserByFid", () => {
+  describe("getUsersByFid", () => {
     test("returns user data for valid FID", async () => {
       const mockResult: AirstackUserQueryResult = {
         Socials: {
@@ -48,10 +48,43 @@ describe("airstackService", () => {
                 { address: "sol123", blockchain: "solana" },
               ],
             },
+
+            {
+              userId: "789",
+              profileName: "testuser2",
+              profileDisplayName: "Test User2",
+              profileImage: "https://example.com/pfp2.jpg",
+              followerCount: 101,
+              followingCount: 51,
+              isFarcasterPowerUser: true,
+              profileBio: "Test bio 2",
+              userAddress: "0x419",
+              connectedAddresses: [
+                { address: "0x789", blockchain: "ethereum" },
+              ],
+            },
           ],
         },
-        Following: { Following: null },
-        Followedby: { Following: null },
+        Following: {
+          Following: [
+            {
+              followingProfileId: "789",
+              followerProfileId: "456",
+            },
+          ],
+        },
+        Followedby: {
+          Following: [
+            {
+              followingProfileId: "456",
+              followerProfileId: "123",
+            },
+            {
+              followingProfileId: "456",
+              followerProfileId: "789",
+            },
+          ],
+        },
       };
 
       vi.mocked(fetchQuery).mockResolvedValue({
@@ -59,22 +92,38 @@ describe("airstackService", () => {
         error: null,
       });
 
-      const result = await service.getUserByFid(123, 456);
+      const result = await service.getUsersByFid([123, 789], 456);
 
       expect(result.error).toBeNull();
-      expect(result.data).toEqual({
-        fid: 123,
-        username: "testuser",
-        displayName: "Test User",
-        pfpUrl: "https://example.com/pfp.jpg",
-        followerCount: 100,
-        followingCount: 50,
-        powerBadge: true,
-        bio: "Test bio",
-        ethAddresses: ["0x456", "0x123"],
-        solAddresses: ["sol123"],
-        viewerContext: { following: false, followedBy: false },
-      });
+      expect(result.data).toEqual([
+        {
+          fid: 123,
+          username: "testuser",
+          displayName: "Test User",
+          pfpUrl: "https://example.com/pfp.jpg",
+          followerCount: 100,
+          followingCount: 50,
+          powerBadge: true,
+          bio: "Test bio",
+          ethAddresses: ["0x456", "0x123"],
+          solAddresses: ["sol123"],
+          viewerContext: { following: false, followedBy: true },
+        },
+        {
+          fid: 789,
+          username: "testuser2",
+          displayName: "Test User2",
+          pfpUrl: "https://example.com/pfp2.jpg",
+
+          followerCount: 101,
+          followingCount: 51,
+          powerBadge: true,
+          bio: "Test bio 2",
+          ethAddresses: ["0x789", "0x419"],
+          solAddresses: [],
+          viewerContext: { following: true, followedBy: true },
+        },
+      ]);
     });
 
     test("handles API errors", async () => {
@@ -83,7 +132,7 @@ describe("airstackService", () => {
         error: { message: "API Error" },
       });
 
-      const result = await service.getUserByFid(123, 456);
+      const result = await service.getUsersByFid([123], 456);
 
       expect(result.data).toBeNull();
       expect(result.error).toEqual({ message: "API Error" });

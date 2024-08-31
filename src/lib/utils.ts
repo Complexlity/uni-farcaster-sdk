@@ -10,7 +10,7 @@ type TestedService = Omit<Service, "name"> & { name: string };
 export function runBasicTests(service: TestedService) {
   describe(`basic tests ${service.name}`, () => {
     const requiredMethods = [
-      "getUserByFid",
+      "getUsersByFid",
       "getUserByUsername",
       "getCastByHash",
       "getCastByUrl",

@@ -14,7 +14,7 @@ test("it should error if api key is not provided", async () => {
   expect(() => new neynarService("")).toThrowError();
 });
 
-describe("getUserByFid", () => {
+describe("getUsersByFid", () => {
   const apiKey = "test-api-key";
   let service: neynarService;
 
@@ -28,11 +28,23 @@ describe("getUserByFid", () => {
   });
 
   test("returns user data for valid FID", async () => {
-    const fid = 123;
+    const fids = [123, 456];
     const viewerFid = DEFAULTS.fid;
 
     const mockResponse = {
       users: [
+        {
+          fid: 123,
+          username: "testuser",
+          display_name: "Test User",
+          pfp_url: "https://example.com/pfp.jpg",
+          profile: { bio: { text: "Test bio" } },
+          follower_count: 100,
+          following_count: 50,
+          verified_addresses: { eth_addresses: ["0x123"], sol_addresses: [] },
+          custody_address: "0x456",
+          viewer_context: { following: false, followed_by: false },
+        },
         {
           fid: 123,
           username: "testuser",
@@ -50,24 +62,38 @@ describe("getUserByFid", () => {
 
     nock(NEYNAR_DEFAULTS.baseApiUrl)
       .get(NEYNAR_DEFAULTS.userByFidUrl)
-      .query({ fids: `${fid}`, viewer_fid: `${viewerFid}` })
+      .query({ fids: `${fids.join(",")}`, viewer_fid: `${viewerFid}` })
       .reply(200, mockResponse);
 
-    const result = await service.getUserByFid(fid);
+    const result = await service.getUsersByFid(fids);
 
     expect(result.error).toBeNull();
-    expect(result.data).toEqual({
-      fid: 123,
-      username: "testuser",
-      displayName: "Test User",
-      pfpUrl: "https://example.com/pfp.jpg",
-      bio: "Test bio",
-      followerCount: 100,
-      followingCount: 50,
-      ethAddresses: ["0x123", "0x456"],
-      solAddresses: [],
-      viewerContext: { following: false, followedBy: false },
-    });
+    expect(result.data).toEqual([
+      {
+        fid: 123,
+        username: "testuser",
+        displayName: "Test User",
+        pfpUrl: "https://example.com/pfp.jpg",
+        bio: "Test bio",
+        followerCount: 100,
+        followingCount: 50,
+        ethAddresses: ["0x123", "0x456"],
+        solAddresses: [],
+        viewerContext: { following: false, followedBy: false },
+      },
+      {
+        fid: 123,
+        username: "testuser",
+        displayName: "Test User",
+        pfpUrl: "https://example.com/pfp.jpg",
+        bio: "Test bio",
+        followerCount: 100,
+        followingCount: 50,
+        ethAddresses: ["0x123", "0x456"],
+        solAddresses: [],
+        viewerContext: { following: false, followedBy: false },
+      },
+    ]);
   });
   test("handles API errors", async () => {
     nock(NEYNAR_DEFAULTS.baseApiUrl)
@@ -75,7 +101,7 @@ describe("getUserByFid", () => {
       .query(true)
       .reply(500, { error: { message: "Internal server error" } });
 
-    const result = await service.getUserByFid(123);
+    const result = await service.getUsersByFid([123, 789]);
 
     expect(result.data).toBeNull();
     expect(result.error).toEqual({ message: "Internal server error" });
@@ -335,7 +361,7 @@ describe("Non-axios errors", () => {
       .query(true)
       .replyWithError("Network error");
 
-    const result = await service.getUserByFid(123);
+    const result = await service.getUsersByFid([123]);
 
     expect(result.data).toBeNull();
     expect(result.error).toEqual({

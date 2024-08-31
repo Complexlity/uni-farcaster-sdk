@@ -16,7 +16,7 @@ describe("uniFarcasterSdk with retries", () => {
   let sdk: uniFarcasterSdk;
   let mockService: {
     name: string;
-    getUserByFid: Mock;
+    getUsersByFid: Mock;
     getUserByUsername: Mock;
     getCastByHash: Mock;
     getCastByUrl: Mock;
@@ -26,7 +26,7 @@ describe("uniFarcasterSdk with retries", () => {
     vi.clearAllMocks();
     mockService = {
       name: "mockService",
-      getUserByFid: vi.fn(),
+      getUsersByFid: vi.fn(),
       getUserByUsername: vi.fn(),
       getCastByHash: vi.fn(),
       getCastByUrl: vi.fn(),
@@ -41,7 +41,7 @@ describe("uniFarcasterSdk with retries", () => {
     sdk.activeService = mockService;
   });
 
-  test("should retry getUserByFid on error", async () => {
+  test("should retry getUsersByFid on error", async () => {
     const mockUser = { fid: 123, username: "testuser" };
     const errorResponse: DataOrError<typeof mockUser> = {
       data: null,
@@ -52,15 +52,15 @@ describe("uniFarcasterSdk with retries", () => {
       error: null,
     };
 
-    mockService.getUserByFid
+    mockService.getUsersByFid
       .mockResolvedValueOnce(errorResponse)
       .mockResolvedValueOnce(errorResponse)
       .mockResolvedValueOnce(successResponse);
 
-    const result = await sdk.getUserByFid(mockUser.fid);
+    const result = await sdk.getUsersByFid(mockUser.fid);
 
     expect(result).toEqual(successResponse);
-    expect(mockService.getUserByFid).toHaveBeenCalledTimes(3);
+    expect(mockService.getUsersByFid).toHaveBeenCalledTimes(3);
   });
 
   test("should return last error if all retries fail", async () => {
@@ -70,12 +70,12 @@ describe("uniFarcasterSdk with retries", () => {
       error: { message: "Error" },
     };
 
-    mockService.getUserByFid.mockResolvedValue(errorResponse);
+    mockService.getUsersByFid.mockResolvedValue(errorResponse);
 
-    const result = await sdk.getUserByFid(mockUser.fid);
+    const result = await sdk.getUsersByFid(mockUser.fid);
 
     expect(result).toEqual(errorResponse);
-    expect(mockService.getUserByFid).toHaveBeenCalledTimes(3);
+    expect(mockService.getUsersByFid).toHaveBeenCalledTimes(3);
   });
 
   test("should not retry if first attempt is successful", async () => {
@@ -85,12 +85,12 @@ describe("uniFarcasterSdk with retries", () => {
       error: null,
     };
 
-    mockService.getUserByFid.mockResolvedValue(successResponse);
+    mockService.getUsersByFid.mockResolvedValue(successResponse);
 
-    const result = await sdk.getUserByFid(mockUser.fid);
+    const result = await sdk.getUsersByFid(mockUser.fid);
 
     expect(result).toEqual(successResponse);
-    expect(mockService.getUserByFid).toHaveBeenCalledTimes(1);
+    expect(mockService.getUsersByFid).toHaveBeenCalledTimes(1);
   });
 
   test("should retry getUserByUsername on error", async () => {

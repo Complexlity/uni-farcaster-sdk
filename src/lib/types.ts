@@ -55,17 +55,17 @@ export interface Service {
   name: TService;
   getUsersByFid(
     fids: number[],
-    viewerFid?: number
+    viewerFid?: number,
   ): Promise<DataOrError<User[]>>;
   getUserByUsername(
     username: string,
-    viewerFid?: number
+    viewerFid?: number,
   ): Promise<DataOrError<UserWithOptionalViewerContext>>;
   getCastByHash(hash: string, viewerFid?: number): Promise<DataOrError<Cast>>;
   getCastByUrl(url: string, viewerFid?: number): Promise<DataOrError<Cast>>;
   customQuery<T>(
     query: string,
-    params: Record<string, unknown>
+    params: Record<string, unknown>,
   ): Promise<DataOrError<T>>;
 }
 
