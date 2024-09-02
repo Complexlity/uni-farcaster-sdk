@@ -14,16 +14,18 @@ npm install uni-farcaster-sdk
 
 ```js
 import uniFarcasterSdk from 'uni-farcaster-sdk'
+//Initialization
 
-//Initialize the sdk
+//with no configuration
 const sdkInstance = new uniFarcasterSdk();
 
-// with custom Neynar api key
+//with custom Neynar api key
 const sdkInstance = new uniFarcasterSdk({
 	neynarApiKey: 'your-neynar-api-key',
 	activeService: 'neynar'//Optional. It's implied from the api key you provide
 })
-// wit custom Airstack api key
+
+// with custom Airstack api key
 const sdkInstance = new uniFarcasterSdk({
 	airstackApiKey: 'your-airstack-api-key',
 	activeService: 'airstack' //Optional. It's implied from the api key you provide
@@ -35,13 +37,13 @@ const sdkInstance = new uniFarcasterSdk({
 	activeService: 'neynar' //Automatically set to airstack since only airstack api key is provided
 })
 
-  //Both services. Useful for retries and custom queries
-  const sdkInstance = new uniFarcasterSdk({
-    neynarApiKey: 'your-neynar-api-key',
-    airstackApiKey: 'your-airstack-api-key',
-    //You should specify if you prefer neynar or airstack else it randomly choses one of them
-    activeService: 'airstack',
-  })
+//Both services. Useful for retries and custom queries
+const sdkInstance = new uniFarcasterSdk({
+  neynarApiKey: 'your-neynar-api-key',
+  airstackApiKey: 'your-airstack-api-key',
+  //You should specify if you prefer neynar or airstack else it randomly choses one of them
+  activeService: 'airstack',
+})
 
 //Debug Mode
 const sdkInstance = new uniFarcasterSdk({
@@ -83,6 +85,10 @@ await sdkInstance.getCastByUrl(castUrl, viewerFid)
 
 //Get Cast By Hash
 await sdkInstance.getCastByHash(castHash, viewerFid)
+
+//Custom Queries
+await sdkInstance.neynar(endpoint, params)
+await sdkInstance.airstack(graphQlQuery, variables)
 ```
 
 > [!IMPORTANT]
