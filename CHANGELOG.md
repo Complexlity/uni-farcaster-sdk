@@ -1,5 +1,11 @@
 # uni-farcaster-sdk
 
+## 0.0.20
+
+### Patch Changes
+
+- eaa8b55: fix: ts on init
+
 ## 0.0.19
 
 ### Patch Changes
