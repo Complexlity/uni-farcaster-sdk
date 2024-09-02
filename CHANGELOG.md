@@ -1,5 +1,11 @@
 # uni-farcaster-sdk
 
+## 0.0.19
+
+### Patch Changes
+
+- f801789: Feat: simplify initialization of sdk instance
+
 ## 0.0.18
 
 ### Patch Changes
