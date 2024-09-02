@@ -1,4 +1,5 @@
 export const DEFAULTS = {
+  neynarApiKey: "NEYNAR_API_DOCS",
   fid: 213144,
   //Complexlity fid
   cacheTtl: 60 * 60 * 1000,

@@ -69,31 +69,15 @@ export interface Service {
   ): Promise<DataOrError<T>>;
 }
 
-export type Config = (
-  | {
-      neynarApiKey: string;
-      airstackApiKey: string;
-      activeService: TService;
-    }
-  | {
-      neynarApiKey: string;
-    }
-  | {
-      airstackApiKey: string;
-    }
-) &
-  (
-    | {
-        debug?: boolean;
-      }
-    | {
-        debug: true;
-        logLevel?: LogLevel;
-      }
-  ) & {
-    cacheTtl?: number;
-    retries?: number;
-    retryStrategy?: RetryStrategy;
-  };
+export type Config = {
+  neynarApiKey?: string;
+  airstackApiKey?: string;
+  activeService?: TService;
+  cacheTtl?: number;
+  retries?: number;
+  retryStrategy?: RetryStrategy;
+  debug?: boolean;
+  logLevel?: LogLevel;
+};
 
 export type RetryStrategy = "normal" | "switch" | "switchTemp";

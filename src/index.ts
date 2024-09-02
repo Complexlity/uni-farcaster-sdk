@@ -13,10 +13,10 @@ import { isAddress } from "@/lib/utils";
 import { type TService, services } from "@/services";
 
 class uniFarcasterSdk implements Omit<Service, "name" | "customQuery"> {
-  private neynarApiKey: string | undefined;
+  private neynarApiKey: string = DEFAULTS.neynarApiKey;
   private airstackApiKey: string | undefined;
   public name = "uniFarcasterSdk";
-  private activeService: Service = new services.neynar("NEYNAR_API_DOCS");
+  private activeService: Service = new services.neynar(this.neynarApiKey);
   private debug = false;
   private logLevel: LogLevel | undefined;
   private cache: Cache = new Cache({ ttl: DEFAULTS.cacheTtl });
@@ -298,7 +298,6 @@ class uniFarcasterSdk implements Omit<Service, "name" | "customQuery"> {
     endpoint: string,
     params: Record<string, unknown> = {},
   ) {
-    if (!this.neynarApiKey) throw new Error("No neynar api key provided");
     const neynarService = new services.neynar(this.neynarApiKey);
 
     return (await this.withCache(
@@ -348,7 +347,7 @@ class uniFarcasterSdk implements Omit<Service, "name" | "customQuery"> {
 function evaluateConfig(config: Config) {
   let activeServiceName: TService = "neynar";
   let airstackApiKey: string | undefined;
-  let neynarApiKey: string | undefined;
+  let neynarApiKey: string = DEFAULTS.neynarApiKey;
   let debug = false;
   let logLevel: LogLevel | undefined = undefined;
   let cacheTtl: number = DEFAULTS.cacheTtl;
@@ -374,7 +373,7 @@ function evaluateConfig(config: Config) {
 
       activeServiceName = service;
     }
-  } else if ("neynarApiKey" in config) {
+  } else if ("neynarApiKey" in config && config.neynarApiKey) {
     neynarApiKey = config.neynarApiKey;
     activeServiceName = "neynar";
     possibleServices = ["neynar"];
