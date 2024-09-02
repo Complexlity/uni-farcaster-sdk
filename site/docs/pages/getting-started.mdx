@@ -35,16 +35,26 @@ bun add uni-farcaster-sdk
 ```ts
 import uniFarcasterSdk from "uni-farcaster-sdk";
 
-//Initialize the sdk with either neynar api key or airstack api key
-const sdkInstance = new uniFarcasterSdk({
-  neynarApiKey: "NEYNAR_API_DOCS",
-  airstackApiKey: "your-airstack-api-key",
-});
-//NOTE: You only need one of them but you can also have both.
+//Initialize the sdk
+const sdkInstance = new uniFarcasterSdk();
 
 //Start Querying the farcaster network
 const { data, error } = await sdkInstance.getUserByFid(213144, 11124);
 ```
+
+:::info
+For production, you need to initialize the sdk with either neynar api key or airstack api key to get the best performance/service. <br></br>
+SEE: [/configuration](/configuration) for all configuration options
+
+e.g
+
+```ts
+const sdkInstance = new uniFarcasterSdk({
+  neynarApiKey: "<your-neynar-api-key>",
+});
+```
+
+:::
 
 ## Features
 

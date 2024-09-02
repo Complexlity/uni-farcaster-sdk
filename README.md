@@ -15,12 +15,15 @@ npm install uni-farcaster-sdk
 ```js
 import uniFarcasterSdk from 'uni-farcaster-sdk'
 
-// Neynar
+//Initialize the sdk
+const sdkInstance = new uniFarcasterSdk();
+
+// with custom Neynar api key
 const sdkInstance = new uniFarcasterSdk({
 	neynarApiKey: 'your-neynar-api-key',
 	activeService: 'neynar'//Optional. It's implied from the api key you provide
 })
-// Airstack
+// wit custom Airstack api key
 const sdkInstance = new uniFarcasterSdk({
 	airstackApiKey: 'your-airstack-api-key',
 	activeService: 'airstack' //Optional. It's implied from the api key you provide
@@ -32,7 +35,7 @@ const sdkInstance = new uniFarcasterSdk({
 	activeService: 'neynar' //Automatically set to airstack since only airstack api key is provided
 })
 
-  //Both
+  //Both services. Useful for retries and custom queries
   const sdkInstance = new uniFarcasterSdk({
     neynarApiKey: 'your-neynar-api-key',
     airstackApiKey: 'your-airstack-api-key',
@@ -48,6 +51,14 @@ const sdkInstance = new uniFarcasterSdk({
   //Optional and only used when debug is true.
   // By default, all query is logged but setting the log level will only log queries with the specified level
 })
+
+//Retries
+const sdkInstance = new uniFarcasterSdk({
+  ...otherConfigOptions
+  retries: 3, //Number of retries to do before returning the error
+  retryStrategy: "normal" | "switch" | "switchTemp" //Optional.
+)}
+// See https://uni-farcaster-sdk.vercel.app/configuration#retries for more information about retries and retryStrategy
 
 //Get Active Service
 sdkInstance.getActiveService() //airstack
