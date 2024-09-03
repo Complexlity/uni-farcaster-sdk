@@ -1,5 +1,11 @@
 # uni-farcaster-sdk
 
+## 0.0.22
+
+### Patch Changes
+
+- 8824a41: update caching behavour, tests
+
 ## 0.0.21
 
 ### Patch Changes
