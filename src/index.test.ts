@@ -141,24 +141,19 @@ describe("main cache", () => {
 
   test("should use cache for getUsersByFid", async () => {
     mockService.getUsersByFid.mockResolvedValueOnce({
-      data: mockUser,
+      data: [mockUser, mockUser],
       error: null,
     });
 
     // First call should hit the service
-    const result1 = await sdk.getUsersByFid([mockUser.fid]);
-    expect(result1.data).toEqual(mockUser);
+    const result1 = await sdk.getUsersByFid([mockUser.fid, mockUser.fid]);
+    expect(result1.data).toEqual([mockUser, mockUser]);
     expect(mockService.getUsersByFid).toHaveBeenCalledTimes(1);
 
     // Second call should use cache
-    const result2 = await sdk.getUsersByFid([mockUser.fid]);
-    expect(result2.data).toEqual(mockUser);
+    const result2 = await sdk.getUsersByFid([mockUser.fid, mockUser.fid]);
+    expect(result2.data).toEqual([mockUser, mockUser]);
     expect(mockService.getUsersByFid).toHaveBeenCalledTimes(1); // Still 1, not 2
-
-    // Second call should use cache
-    const result3 = await sdk.getUserByUsername(mockUser.username);
-    expect(result3.data).toEqual(mockUser);
-    expect(mockService.getUserByUsername).not.toBeCalled(); // Still 1, not 2
   });
 
   test("should use cache for getUserByUsername", async () => {
@@ -176,11 +171,6 @@ describe("main cache", () => {
     const result2 = await sdk.getUserByUsername(mockUser.username);
     expect(result2.data).toEqual(mockUser);
     expect(mockService.getUserByUsername).toHaveBeenCalledTimes(1); // Still 1, not 2
-
-    // Third call with fid should still use cache
-    const result3 = await sdk.getUsersByFid([mockUser.fid]);
-    expect(result3.data).toEqual(mockUser);
-    expect(mockService.getUsersByFid).not.toBeCalled();
   });
 
   test("should use cache for getCastByHash", async () => {

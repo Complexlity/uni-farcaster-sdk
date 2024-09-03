@@ -44,15 +44,23 @@ describe("cache", () => {
     cache = new Cache();
   });
 
-  test("should set and get user data", () => {
+  test("should set and get user data by fid", () => {
     const user: User = dummyUser;
 
-    cache.set("user", user, [dummyViewerFid]);
+    cache.set("fid", [user, user], [[user.fid, user.fid], dummyViewerFid]);
 
-    const cachedUserByFid = cache.get("user", [user.fid, dummyViewerFid]);
-    expect(cachedUserByFid).toEqual(user);
+    const cachedUserByFid = cache.get("fid", [
+      [user.fid, user.fid],
+      dummyViewerFid,
+    ]);
+    expect(cachedUserByFid).toEqual([user, user]);
+  });
+  test("should set and get user data by username", () => {
+    const user: User = dummyUser;
 
-    const cachedUserByUsername = cache.get("user", [
+    cache.set("username", user, [user.username, dummyViewerFid]);
+
+    const cachedUserByUsername = cache.get("username", [
       user.username,
       dummyViewerFid,
     ]);
@@ -71,8 +79,10 @@ describe("cache", () => {
   });
 
   test("should return null for non-existent data", () => {
-    const nonExistentUser = cache.get("user", ["nonexistent"]);
+    const nonExistentUser = cache.get("username", ["nonexistent"]);
     expect(nonExistentUser).toBeNull();
+    const nonExistentUser2 = cache.get("fid", [[124], 213144]);
+    expect(nonExistentUser2).toBeNull();
 
     const nonExistentCast = cache.get("cast", ["nonexistent"]);
     expect(nonExistentCast).toBeNull();
@@ -106,12 +116,15 @@ describe("cache with custom TTL", () => {
     const cache = new Cache({ ttl: 0 });
     const user: User = dummyUser;
 
-    cache.set("user", user, [dummyViewerFid]);
+    cache.set("username", user, [user.username, dummyViewerFid]);
 
-    const cachedUserByFid = cache.get("user", [user.fid, dummyViewerFid]);
+    const cachedUserByFid = cache.get("username", [
+      user.username,
+      dummyViewerFid,
+    ]);
     expect(cachedUserByFid).toBeNull();
 
-    const cachedUserByUsername = cache.get("user", [
+    const cachedUserByUsername = cache.get("username", [
       user.username,
       dummyViewerFid,
     ]);
@@ -123,12 +136,16 @@ describe("cache with custom TTL", () => {
     const cache = new Cache({ ttl: cacheTtl });
     const user: User = dummyUser;
 
-    cache.set("user", user, [dummyViewerFid]);
+    cache.set("fid", [user, user], [[user.fid, user.fid], dummyViewerFid]);
 
-    const cachedUserByFid = cache.get("user", [user.fid, dummyViewerFid]);
-    expect(cachedUserByFid).toEqual(user);
+    const cachedUserByFid = cache.get("fid", [
+      [user.fid, user.fid],
+      dummyViewerFid,
+    ]);
+    expect(cachedUserByFid).toEqual([user, user]);
 
-    const cachedUserByUsername = cache.get("user", [
+    cache.set("username", user, [user.username, dummyViewerFid]);
+    const cachedUserByUsername = cache.get("username", [
       user.username,
       dummyViewerFid,
     ]);
@@ -137,10 +154,13 @@ describe("cache with custom TTL", () => {
     // Wait for cache to expire
     await new Promise((resolve) => setTimeout(resolve, cacheTtl + 10));
 
-    const cachedUserByFid2 = cache.get("user", [user.fid, dummyViewerFid]);
+    const cachedUserByFid2 = cache.get("fid", [
+      [user.fid, user.fid],
+      dummyViewerFid,
+    ]);
     expect(cachedUserByFid2).toBeNull();
 
-    const cachedUserByUsername2 = cache.get("user", [
+    const cachedUserByUsername2 = cache.get("username", [
       user.username,
       dummyViewerFid,
     ]);
