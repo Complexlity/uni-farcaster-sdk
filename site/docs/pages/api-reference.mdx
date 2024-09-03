@@ -29,12 +29,16 @@ sdkInstance.setActiveService("neynar");
 If you didn't pass the needed api key for the active service, it doesn't throw an error but would ignore it
 :::
 
-## getUserByFid
+## getUsersByFid
 
 ```ts
-const fid = 11124;
+const fid1 = 11124;
+const fid2 = 317794;
 const viewerFid = 3854; //Optional. Default: 213144;
-const { data: user, error } = await sdkInstance.getUserByFid(fid, viewerFid);
+const { data: user, error } = await sdkInstance.getUsersByFid(
+  [fid1, fid2],
+  viewerFid
+);
 ```
 
 ## getUserByUsername
@@ -49,7 +53,7 @@ const { data: user, error } = await sdkInstance.getUserByUsername(
 ```
 
 :::danger
-This method does not return `viewerContext` when using `airstack` service, so use `getUserByFid` whenever you can
+This method does not return `viewerContext` when using `airstack` service, so use `getUsersByFid` whenever you can
 :::
 
 ## getCastByHash
