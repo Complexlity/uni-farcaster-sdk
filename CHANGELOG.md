@@ -1,5 +1,11 @@
 # uni-farcaster-sdk
 
+## 0.0.21
+
+### Patch Changes
+
+- 3d18177: fix: make empty config obj not error
+
 ## 0.0.20
 
 ### Patch Changes
