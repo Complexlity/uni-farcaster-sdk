@@ -9,3 +9,4 @@ tsconfig.json
 biome.json
 vite.config.mts
 .nvmrc
+site
