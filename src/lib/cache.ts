@@ -50,12 +50,13 @@ export class Cache {
     const cacheKey = `${["custom", ...params].join(":")}`;
     return this.getData<unknown>(cacheKey) as unknown | null;
   }
-  private setUserCachedData(data: User, params: UnknownArray) {
-    const fidKey = `${["user", data.fid, ...params].join(":")}`;
-    const usernameKey = `${["user", data.username, ...params].join(":")}`;
+  private setUserCachedData(
+    data: User | UserWithOptionalViewerContext | User[],
+    params: UnknownArray,
+  ) {
+    const cacheKey = `${["user", ...params].join(":")}`;
     const setData = { data, timestamp: Date.now() };
-    this.cache.set(fidKey, setData);
-    this.cache.set(usernameKey, setData);
+    this.cache.set(cacheKey, setData);
     return data;
   }
   private setCastCachedData(data: Cast, params: UnknownArray): Cast {
@@ -75,8 +76,9 @@ export class Cache {
   }
 
   public get<T extends CacheKeys>(type: T, params: UnknownArray) {
-    if (type === "user") {
-      return this.getUserCachedData(params) as T extends "user"
+    if (type === "fid" || type === "username") {
+      const striginfiedParams = params.map((param) => JSON.stringify(param));
+      return this.getUserCachedData(striginfiedParams) as T extends "user"
         ? User | UserWithOptionalViewerContext | null
         : never;
     }
@@ -100,11 +102,19 @@ export class Cache {
     data: CacheTypes[T],
     params: UnknownArray,
   ): User | Cast | unknown {
-    if (type === "user") {
-      return this.setUserCachedData(data as User, params);
-    }
     if (type === "cast") {
       return this.setCastCachedData(data as Cast, params);
+    }
+    if (type === "username") {
+      const striginfiedParams = params.map((param) => JSON.stringify(param));
+      return this.setUserCachedData(
+        data as User | UserWithOptionalViewerContext,
+        striginfiedParams,
+      );
+    }
+    if (type === "fid") {
+      const striginfiedParams = params.map((param) => JSON.stringify(param));
+      return this.setUserCachedData(data as User[], striginfiedParams);
     }
     if (type === "custom") {
       const striginfiedParams = params.map((param) => JSON.stringify(param));
@@ -120,7 +130,8 @@ type CacheConfig = {
 };
 
 export type CacheTypes = {
-  user: User | UserWithOptionalViewerContext;
+  fid: User[];
+  username: User | UserWithOptionalViewerContext;
   cast: Cast;
   custom: unknown;
 };

@@ -162,6 +162,7 @@ export class airstackService implements Service {
       return { data, error };
     }
     const returnedData = data;
+    console.log(returnedData);
     return { data: this.getCastFromAirstackResult(returnedData), error: null };
   }
 

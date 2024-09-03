@@ -243,8 +243,8 @@ class uniFarcasterSdk implements Omit<Service, "name" | "customQuery"> {
     );
     const { data } = result;
     if (data) {
-      //First params is the fid or username and we don't want to add that since we would get that from data
-      const setParams = type === "custom" ? params : params.slice(1);
+      //First params is the either hash or url and we don't want to add that since we would get that from data
+      const setParams = type === "cast" ? params.slice(1) : params;
       this.cache.set(type, data, setParams);
     }
     return result;
@@ -309,7 +309,7 @@ class uniFarcasterSdk implements Omit<Service, "name" | "customQuery"> {
   }
 
   public async getUsersByFid(fids: number[], viewerFid: number = DEFAULTS.fid) {
-    const res = (await this.withCache("user", "getUsersByFid", [
+    const res = (await this.withCache("fid", "getUsersByFid", [
       fids,
       viewerFid,
     ])) as DataOrError<User[]>;
@@ -320,7 +320,7 @@ class uniFarcasterSdk implements Omit<Service, "name" | "customQuery"> {
     username: string,
     viewerFid: number = DEFAULTS.fid,
   ) {
-    const res = await this.withCache("user", "getUserByUsername", [
+    const res = await this.withCache("username", "getUserByUsername", [
       username,
       viewerFid,
     ]);
