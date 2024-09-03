@@ -39,6 +39,17 @@ type User = {
 };
 ```
 
+:::info
+`ethAddresses` returns an array containing all the user's connected addresses and their custody address. The custody address is always the last on the list. <br></br>
+
+e.g
+
+```
+const userCustodyAddress = user.ethAddresses.at(-1) //last item
+```
+
+:::
+
 Queries: `getUserByFid` and `getUserByUsername`
 returns `Result<User>`.
 
