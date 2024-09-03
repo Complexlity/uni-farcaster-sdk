@@ -39,7 +39,7 @@ import uniFarcasterSdk from "uni-farcaster-sdk";
 const sdkInstance = new uniFarcasterSdk();
 
 //Start Querying the farcaster network
-const { data, error } = await sdkInstance.getUserByFid(213144, 11124);
+const { data, error } = await sdkInstance.getUsersByFid([213144], 11124);
 ```
 
 :::info
