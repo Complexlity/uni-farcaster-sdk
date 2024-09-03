@@ -1,18 +1,20 @@
 # Configuration Options
 
 ```ts
-type configurationOptions = {
-	neynarApiKey?: string,
-	airstackApiKey?: string,
-	activeService?: 'airstack' | 'neynar',
-	debug?: boolean,
-	logLevel: "info" | "warning" | "error" | "success",
-	cacheTtl: number,
-	retries? number,
-	retryStrategy: "normal" | "switch" | "switchTemp"
-}
+type configurationOptions =
+  | {
+      neynarApiKey?: string;
+      airstackApiKey?: string;
+      activeService?: "airstack" | "neynar";
+      debug?: boolean;
+      logLevel?: "info" | "warning" | "error" | "success";
+      cacheTtl?: number;
+      retries?: number;
+      retryStrategy?: "normal" | "switch" | "switchTemp";
+    }
+  | undefined;
 
-const sdkInstanceInstance = new uniFarcasterSdk(configurationOptions)
+const sdkInstanceInstance = new uniFarcasterSdk(configurationOptions);
 ```
 
 `configurationOptions` is an object that takes the properties below
