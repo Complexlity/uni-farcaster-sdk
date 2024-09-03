@@ -59,7 +59,7 @@ describe("main", () => {
       () =>
         new uniFarcasterSdk({
           activeService: "neynar",
-        })
+        }),
     ).not.toThrowError();
   });
 
@@ -366,7 +366,7 @@ describe("custom queries", () => {
         neynarApiKey: "neynar-api-key",
       });
       await expect(sdk.airstack("query { example }")).rejects.toThrowError(
-        "No airstack api key provided"
+        "No airstack api key provided",
       );
     });
   });
