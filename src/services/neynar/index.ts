@@ -24,7 +24,7 @@ export class neynarService implements Service {
   constructor(apiKey: string) {
     if (!apiKey) {
       throw new Error(
-        "Attempt to use an neynar API without first providing an api key"
+        "Attempt to use an neynar API without first providing an api key",
       );
     }
     this.apiKey = apiKey;
@@ -37,8 +37,8 @@ export class neynarService implements Service {
         typeof e.response?.data.message === "string"
           ? e.response?.data.message
           : typeof e.response?.data?.error?.message === "string"
-          ? e.response?.data?.error.message
-          : GENERIC_ERROR_MESSAGE;
+            ? e.response?.data?.error.message
+            : GENERIC_ERROR_MESSAGE;
       return {
         data: null,
         error: {
@@ -114,7 +114,7 @@ export class neynarService implements Service {
   }
   async getUsersByFid(
     fids: number[],
-    viewerFid: number = DEFAULTS.fid
+    viewerFid: number = DEFAULTS.fid,
   ): Promise<DataOrError<User[]>> {
     try {
       const usersInfo = await api.get<{ users: NeynarUser[] }>(
@@ -125,12 +125,12 @@ export class neynarService implements Service {
             viewer_fid: `${viewerFid}`,
           },
           headers: this.getHeaders(),
-        }
+        },
       );
 
       const users = usersInfo.data.users;
       const returnedUsers = users.map((user) =>
-        this.getUserFromNeynarResponse(user)
+        this.getUserFromNeynarResponse(user),
       );
       return { data: returnedUsers, error: null };
     } catch (e) {
@@ -139,7 +139,7 @@ export class neynarService implements Service {
   }
   async getUserByUsername(
     username: string,
-    viewerFid?: number
+    viewerFid?: number,
   ): Promise<DataOrError<Omit<User, "powerBadge">>> {
     try {
       const usersInfo = await api.get<{ result: { user: NeynarV1User } }>(
@@ -150,7 +150,7 @@ export class neynarService implements Service {
             viewerFid: `${viewerFid}`,
           },
           headers: this.getHeaders(),
-        }
+        },
       );
 
       const v1User = usersInfo.data.result.user;
@@ -164,7 +164,7 @@ export class neynarService implements Service {
 
   async getCastByHash(
     hash: string,
-    viewerFid: number = DEFAULTS.fid
+    viewerFid: number = DEFAULTS.fid,
   ): Promise<DataOrError<Cast>> {
     try {
       const castInfo = await api.get<CastFetchResult>(NEYNAR_DEFAULTS.castUrl, {
@@ -186,7 +186,7 @@ export class neynarService implements Service {
 
   async getCastByUrl(
     url: string,
-    viewerFid: number = DEFAULTS.fid
+    viewerFid: number = DEFAULTS.fid,
   ): Promise<DataOrError<Cast>> {
     try {
       const castInfo = await api.get<CastFetchResult>(NEYNAR_DEFAULTS.castUrl, {
