@@ -145,6 +145,11 @@ export class airstackService implements Service {
     if (error) {
       return { data, error };
     }
+    if (!data.FarcasterCasts?.Cast || data.FarcasterCasts.Cast.length == 0)
+      return {
+        data: null,
+        error: { message: `cast with hash "${hash}" not found` },
+      };
     const returnedData = data;
     return { data: this.getCastFromAirstackResult(returnedData), error: null };
   }
@@ -161,8 +166,13 @@ export class airstackService implements Service {
     if (error) {
       return { data, error };
     }
+
+    if (!data.FarcasterCasts?.Cast || data.FarcasterCasts.Cast.length == 0)
+      return {
+        data: null,
+        error: { message: `cast with url "${url}" not found` },
+      };
     const returnedData = data;
-    console.log(returnedData);
     return { data: this.getCastFromAirstackResult(returnedData), error: null };
   }
 
