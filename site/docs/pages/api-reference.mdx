@@ -82,8 +82,8 @@ const { data: cast, error } = await sdkInstance.getCastByUrl(
 );
 ```
 
-:::info
-All `getCastByUrl` queries use neynar service even when the active service is `airstack`.
+:::warning
+ALL `getCastByUrl` queries NEYNAR service even when the active service is `airstack`.<br></br>
 This is because there's currently an issue with Airstack where it can only fetch top level casts by URL. Replies return null.
 :::
 
