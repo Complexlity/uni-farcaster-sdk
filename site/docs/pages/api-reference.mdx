@@ -82,6 +82,11 @@ const { data: cast, error } = await sdkInstance.getCastByUrl(
 );
 ```
 
+:::info
+All `getCastByUrl` queries use neynar service even when the active service is `airstack`.
+This is because there's currently an issue with Airstack where it can only fetch top level casts by URL. Replies return null.
+:::
+
 ## Custom Queries
 
 The above four methods are the most commonly needed from these services. However, there's a lot more you might need. So you can use either of these services directly
