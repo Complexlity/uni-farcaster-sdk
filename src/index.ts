@@ -339,7 +339,17 @@ class uniFarcasterSdk implements Omit<Service, "name" | "customQuery"> {
   }
 
   public async getCastByUrl(url: string, viewerFid: number = DEFAULTS.fid) {
+    /* Airstack only support top level casts by url so always only use neynar for query for this */
+    const currentService = this.activeService.name;
+
+    if (currentService === "airstack") {
+      this.activeService = this.createService("neynar");
+    }
     const res = await this.withCache("cast", "getCastByUrl", [url, viewerFid]);
+
+    if (currentService === "airstack") {
+      this.activeService = this.createService(currentService);
+    }
     return res;
   }
 }
