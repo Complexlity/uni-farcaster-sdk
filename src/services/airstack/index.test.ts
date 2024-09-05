@@ -372,7 +372,7 @@ describe("airstackService", () => {
 
       const result = await service.getCastByUrl(
         "https://warpcast.com/testuser/0123456789",
-        456
+        456,
       );
 
       expect(result.error).toBeNull();
@@ -414,7 +414,7 @@ describe("airstackService", () => {
 
       const result = await service.getCastByUrl(
         "https://warpcast.com/testuser/0123456789",
-        456
+        456,
       );
 
       expect(result.data).toBeNull();
