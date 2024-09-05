@@ -1,5 +1,11 @@
 # uni-farcaster-sdk
 
+## 0.0.23
+
+### Patch Changes
+
+- 1a14680: patch: airstack open bug to only use neynar
+
 ## 0.0.22
 
 ### Patch Changes
