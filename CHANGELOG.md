@@ -1,5 +1,11 @@
 # uni-farcaster-sdk
 
+## 0.0.24
+
+### Patch Changes
+
+- 31392b6: Remove power user from query results
+
 ## 0.0.23
 
 ### Patch Changes
