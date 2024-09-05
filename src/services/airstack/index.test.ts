@@ -137,29 +137,17 @@ describe("airstackService", () => {
       expect(result.data).toBeNull();
       expect(result.error).toEqual({ message: "API Error" });
     });
-  });
 
-  describe("getUserByUsername", () => {
-    test("returns user data for valid username", async () => {
-      const mockResult = {
+    test("returns error if user object is empty", async () => {
+      const mockResult: AirstackUserQueryResult = {
         Socials: {
-          Social: [
-            {
-              userId: "123",
-              profileName: "testuser",
-              profileDisplayName: "Test User",
-              profileImage: "https://example.com/pfp.jpg",
-              followerCount: 100,
-              followingCount: 50,
-              isFarcasterPowerUser: true,
-              profileBio: "Test bio",
-              userAddress: "0x123",
-              connectedAddresses: [
-                { address: "0x456", blockchain: "ethereum" },
-                { address: "sol123", blockchain: "solana" },
-              ],
-            },
-          ],
+          Social: [],
+        },
+        Following: {
+          Following: [],
+        },
+        Followedby: {
+          Following: [],
         },
       };
 
@@ -168,33 +156,96 @@ describe("airstackService", () => {
         error: null,
       });
 
-      const result = await service.getUserByUsername("testuser", 456);
+      const users = [123, 345];
+
+      const result = await service.getUsersByFid(users, 456);
+      expect(result.data).toEqual([]);
 
       expect(result.error).toBeNull();
-      expect(result.data).toEqual({
-        fid: 123,
-        username: "testuser",
-        displayName: "Test User",
-        pfpUrl: "https://example.com/pfp.jpg",
-        followerCount: 100,
-        followingCount: 50,
-        powerBadge: true,
-        bio: "Test bio",
-        ethAddresses: ["0x456", "0x123"],
-        solAddresses: ["sol123"],
-      });
     });
 
-    test("handles API errors", async () => {
-      vi.mocked(fetchQuery).mockResolvedValue({
-        data: null,
-        error: { message: "User not found" },
+    describe("getUserByUsername", () => {
+      test("returns user data for valid username", async () => {
+        const mockResult = {
+          Socials: {
+            Social: [
+              {
+                userId: "123",
+                profileName: "testuser",
+                profileDisplayName: "Test User",
+                profileImage: "https://example.com/pfp.jpg",
+                followerCount: 100,
+                followingCount: 50,
+                isFarcasterPowerUser: true,
+                profileBio: "Test bio",
+                userAddress: "0x123",
+                connectedAddresses: [
+                  { address: "0x456", blockchain: "ethereum" },
+                  { address: "sol123", blockchain: "solana" },
+                ],
+              },
+            ],
+          },
+        };
+
+        vi.mocked(fetchQuery).mockResolvedValue({
+          data: mockResult,
+          error: null,
+        });
+
+        const result = await service.getUserByUsername("testuser", 456);
+
+        expect(result.error).toBeNull();
+        expect(result.data).toEqual({
+          fid: 123,
+          username: "testuser",
+          displayName: "Test User",
+          pfpUrl: "https://example.com/pfp.jpg",
+          followerCount: 100,
+          followingCount: 50,
+          powerBadge: true,
+          bio: "Test bio",
+          ethAddresses: ["0x456", "0x123"],
+          solAddresses: ["sol123"],
+        });
       });
 
-      const result = await service.getUserByUsername("nonexistent", 456);
+      test("handles API errors", async () => {
+        vi.mocked(fetchQuery).mockResolvedValue({
+          data: null,
+          error: { message: "User not found" },
+        });
 
-      expect(result.data).toBeNull();
-      expect(result.error).toEqual({ message: "User not found" });
+        const result = await service.getUserByUsername("nonexistent", 456);
+
+        expect(result.data).toBeNull();
+        expect(result.error).toEqual({ message: "User not found" });
+      });
+      test("returns error if user object is empty", async () => {
+        const mockResult: AirstackUserQueryResult = {
+          Socials: {
+            Social: [],
+          },
+          Following: {
+            Following: [],
+          },
+          Followedby: {
+            Following: [],
+          },
+        };
+
+        vi.mocked(fetchQuery).mockResolvedValue({
+          data: mockResult,
+          error: null,
+        });
+
+        const result = await service.getUserByUsername("nonexistent", 456);
+
+        expect(result.data).toBeNull();
+        expect(result.error).toEqual({
+          message: `user with username "nonexistent" not found`,
+        });
+      });
     });
   });
 
@@ -259,8 +310,29 @@ describe("airstackService", () => {
       expect(result.data).toBeNull();
       expect(result.error).toEqual({ message: "Cast not found" });
     });
-  });
 
+    test("returns error if cast object is empty", async () => {
+      const mockResult: AirstackCastQueryResult = {
+        FarcasterCasts: {
+          Cast: [],
+        },
+        LikedBy: { Reaction: null },
+        RecastedBy: { Reaction: null },
+      };
+
+      vi.mocked(fetchQuery).mockResolvedValue({
+        data: mockResult,
+        error: null,
+      });
+
+      const result = await service.getCastByHash("test-hash", 456);
+
+      expect(result.data).toBeNull();
+      expect(result.error).toEqual({
+        message: `cast with hash "test-hash" not found`,
+      });
+    });
+  });
   describe("getCastByUrl", () => {
     test("returns cast data for valid URL", async () => {
       const mockResult: AirstackCastQueryResult = {
@@ -300,7 +372,7 @@ describe("airstackService", () => {
 
       const result = await service.getCastByUrl(
         "https://warpcast.com/testuser/0123456789",
-        456,
+        456
       );
 
       expect(result.error).toBeNull();
@@ -324,6 +396,31 @@ describe("airstackService", () => {
 
       expect(result.data).toBeNull();
       expect(result.error).toEqual({ message: "Invalid URL" });
+    });
+
+    test("returns error if cast object is empty", async () => {
+      const mockResult: AirstackCastQueryResult = {
+        FarcasterCasts: {
+          Cast: [],
+        },
+        LikedBy: { Reaction: null },
+        RecastedBy: { Reaction: null },
+      };
+
+      vi.mocked(fetchQuery).mockResolvedValue({
+        data: mockResult,
+        error: null,
+      });
+
+      const result = await service.getCastByUrl(
+        "https://warpcast.com/testuser/0123456789",
+        456
+      );
+
+      expect(result.data).toBeNull();
+      expect(result.error).toEqual({
+        message: `cast with url "https://warpcast.com/testuser/0123456789" not found`,
+      });
     });
   });
 
