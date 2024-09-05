@@ -40,7 +40,6 @@ describe("airstackService", () => {
               profileImage: "https://example.com/pfp.jpg",
               followerCount: 100,
               followingCount: 50,
-              isFarcasterPowerUser: true,
               profileBio: "Test bio",
               userAddress: "0x123",
               connectedAddresses: [
@@ -56,7 +55,6 @@ describe("airstackService", () => {
               profileImage: "https://example.com/pfp2.jpg",
               followerCount: 101,
               followingCount: 51,
-              isFarcasterPowerUser: true,
               profileBio: "Test bio 2",
               userAddress: "0x419",
               connectedAddresses: [
@@ -103,7 +101,6 @@ describe("airstackService", () => {
           pfpUrl: "https://example.com/pfp.jpg",
           followerCount: 100,
           followingCount: 50,
-          powerBadge: true,
           bio: "Test bio",
           ethAddresses: ["0x456", "0x123"],
           solAddresses: ["sol123"],
@@ -117,7 +114,6 @@ describe("airstackService", () => {
 
           followerCount: 101,
           followingCount: 51,
-          powerBadge: true,
           bio: "Test bio 2",
           ethAddresses: ["0x789", "0x419"],
           solAddresses: [],
@@ -203,7 +199,6 @@ describe("airstackService", () => {
           pfpUrl: "https://example.com/pfp.jpg",
           followerCount: 100,
           followingCount: 50,
-          powerBadge: true,
           bio: "Test bio",
           ethAddresses: ["0x456", "0x123"],
           solAddresses: ["sol123"],
@@ -269,7 +264,6 @@ describe("airstackService", () => {
                 profileImage: "https://example.com/pfp.jpg",
                 followerCount: 100,
                 followingCount: 50,
-                isFarcasterPowerUser: true,
                 profileBio: "Test bio",
                 userAddress: "0x123",
                 connectedAddresses: [],
@@ -353,7 +347,6 @@ describe("airstackService", () => {
                 profileImage: "https://example.com/pfp.jpg",
                 followerCount: 100,
                 followingCount: 50,
-                isFarcasterPowerUser: true,
                 profileBio: "Test bio",
                 userAddress: "0x123",
                 connectedAddresses: [],
@@ -372,7 +365,7 @@ describe("airstackService", () => {
 
       const result = await service.getCastByUrl(
         "https://warpcast.com/testuser/0123456789",
-        456,
+        456
       );
 
       expect(result.error).toBeNull();
@@ -414,7 +407,7 @@ describe("airstackService", () => {
 
       const result = await service.getCastByUrl(
         "https://warpcast.com/testuser/0123456789",
-        456,
+        456
       );
 
       expect(result.data).toBeNull();

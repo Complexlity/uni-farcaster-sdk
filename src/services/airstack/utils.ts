@@ -1,6 +1,6 @@
 import type { DataOrError } from "@/lib/types";
 import axios from "axios";
-
+import fs from "fs";
 const AIRSTACK_ENDPOINT = "https://api.airstack.xyz/gql";
 
 const socialReturnedQuery = `
@@ -15,8 +15,7 @@ const socialReturnedQuery = `
       }
       followerCount
       followingCount
-      profileImage
-      isFarcasterPowerUser`;
+      profileImage`;
 
 const castReturnedQuery = `
       url
@@ -134,8 +133,10 @@ export const castByUrlQuery = (castUrl: string, viewerFid: number) =>
 export async function _fetch<ResponseType>(
   authKey: string,
   query: string,
-  variables: Record<string, unknown>,
+  variables: Record<string, unknown>
 ): Promise<DataOrError<ResponseType>> {
+  fs.writeFileSync("query.txt", query);
+  console.log({ query });
   try {
     const response = await axios({
       url: AIRSTACK_ENDPOINT,
@@ -171,7 +172,7 @@ export async function _fetch<ResponseType>(
 export async function fetchGql<ResponseType>(
   authKey: string,
   query: string,
-  variables: Record<string, unknown>,
+  variables: Record<string, unknown>
 ) {
   return _fetch<ResponseType>(authKey, query, variables);
 }
@@ -179,7 +180,7 @@ export async function fetchGql<ResponseType>(
 export async function fetchQuery<T>(
   authKey: string,
   query: string,
-  variables = {},
+  variables = {}
 ): Promise<DataOrError<T>> {
   const { data, error } = await fetchGql<T>(authKey, query, variables);
 

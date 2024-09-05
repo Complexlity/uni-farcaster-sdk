@@ -36,7 +36,6 @@ export interface Social {
   followingCount: number;
   profileImage: string;
   profileBio: string;
-  isFarcasterPowerUser: boolean;
 }
 
 export interface ConnectedAddress {
@@ -84,7 +83,6 @@ export interface CastedBy {
   followerCount: number;
   followingCount: number;
   profileImage: string;
-  isFarcasterPowerUser: boolean;
 }
 
 export interface ConnectedAddress {
