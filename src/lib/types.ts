@@ -21,7 +21,6 @@ export type User = {
   pfpUrl: string;
   followerCount: number;
   followingCount: number;
-  powerBadge?: boolean;
   viewerContext: {
     following: boolean;
     followedBy: boolean;

@@ -1,6 +1,6 @@
+import fs from "fs";
 import type { DataOrError } from "@/lib/types";
 import axios from "axios";
-
 const AIRSTACK_ENDPOINT = "https://api.airstack.xyz/gql";
 
 const socialReturnedQuery = `
@@ -15,8 +15,7 @@ const socialReturnedQuery = `
       }
       followerCount
       followingCount
-      profileImage
-      isFarcasterPowerUser`;
+      profileImage`;
 
 const castReturnedQuery = `
       url
@@ -136,6 +135,8 @@ export async function _fetch<ResponseType>(
   query: string,
   variables: Record<string, unknown>,
 ): Promise<DataOrError<ResponseType>> {
+  fs.writeFileSync("query.txt", query);
+  console.log({ query });
   try {
     const response = await axios({
       url: AIRSTACK_ENDPOINT,

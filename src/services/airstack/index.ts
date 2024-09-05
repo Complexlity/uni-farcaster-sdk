@@ -32,7 +32,6 @@ export class airstackService implements Service {
       pfpUrl: userDetails.profileImage,
       followerCount: userDetails.followerCount,
       followingCount: userDetails.followingCount,
-      powerBadge: userDetails.isFarcasterPowerUser,
       bio: userDetails.profileBio,
       ethAddresses: [...userAddresses.ethAddresses, userDetails.userAddress],
       solAddresses: [...userAddresses.solAddresses],

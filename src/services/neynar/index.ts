@@ -87,7 +87,6 @@ export class neynarService implements Service {
         following: user.viewer_context.following,
         followedBy: user.viewer_context.followed_by,
       },
-      ...("power_badge" in user ? { powerBadge: user.power_badge } : {}),
     };
   }
 
