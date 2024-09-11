@@ -7,10 +7,10 @@ import {
   test,
   vi,
 } from "vitest";
-import uniFarcasterSdk from ".";
 import { Cache } from "./lib/cache";
 import { runBasicTests } from "./lib/utils";
 import { services } from "./services";
+import { uniFarcasterSdk } from "./uniFarcasterSdk";
 
 const service = new uniFarcasterSdk({
   neynarApiKey: "test-neynar-api-key",

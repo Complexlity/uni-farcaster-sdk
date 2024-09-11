@@ -1,7 +1,7 @@
 import { type Mock, beforeEach, describe, expect, test, vi } from "vitest";
-import uniFarcasterSdk from ".";
 import { DataOrError } from "./lib/types";
 import { services } from "./services";
+import { uniFarcasterSdk } from "./uniFarcasterSdk";
 
 vi.mock("./services", () => ({
   services: {
@@ -57,7 +57,7 @@ describe("uniFarcasterSdk with retries", () => {
       .mockResolvedValueOnce(errorResponse)
       .mockResolvedValueOnce(successResponse);
 
-    const result = await sdk.getUsersByFid(mockUser.fid);
+    const result = await sdk.getUsersByFid([mockUser.fid]);
 
     expect(result).toEqual(successResponse);
     expect(mockService.getUsersByFid).toHaveBeenCalledTimes(3);
@@ -72,7 +72,7 @@ describe("uniFarcasterSdk with retries", () => {
 
     mockService.getUsersByFid.mockResolvedValue(errorResponse);
 
-    const result = await sdk.getUsersByFid(mockUser.fid);
+    const result = await sdk.getUsersByFid([mockUser.fid]);
 
     expect(result).toEqual(errorResponse);
     expect(mockService.getUsersByFid).toHaveBeenCalledTimes(3);
@@ -87,7 +87,7 @@ describe("uniFarcasterSdk with retries", () => {
 
     mockService.getUsersByFid.mockResolvedValue(successResponse);
 
-    const result = await sdk.getUsersByFid(mockUser.fid);
+    const result = await sdk.getUsersByFid([mockUser.fid]);
 
     expect(result).toEqual(successResponse);
     expect(mockService.getUsersByFid).toHaveBeenCalledTimes(1);
