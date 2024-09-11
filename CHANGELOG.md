@@ -1,5 +1,11 @@
 # uni-farcaster-sdk
 
+## 0.0.25
+
+### Patch Changes
+
+- 08d5425: Export types for consuming
+
 ## 0.0.24
 
 ### Patch Changes
